@@ -55,13 +55,13 @@ class DocumentApiTests(TestCase):
     def test_not_implemented_endpoints_do_not_fake_success(self):
         self.client.force_authenticate(self.alice)
         doc = Document.objects.create(owner=self.alice, title="Invoice")
-        for url in ["/api/documents/upload/", "/api/ask/", f"/api/documents/{doc.pk}/extract/"]:
+        for url in ["/api/ask/", f"/api/documents/{doc.pk}/extract/"]:
             self.assertEqual(self.client.post(url).status_code, 501)
 
-    def test_metadata_is_not_mutable_or_deletable_yet(self):
+    def test_metadata_can_be_deleted_but_not_patched(self):
         self.client.force_authenticate(self.alice)
         doc = Document.objects.create(owner=self.alice, title="Invoice")
-        self.assertEqual(self.client.delete(f"/api/documents/{doc.pk}/").status_code, 405)
+        self.assertEqual(self.client.delete(f"/api/documents/{doc.pk}/").status_code, 204)
         self.assertEqual(self.client.patch(f"/api/documents/{doc.pk}/", {"title": "Changed"}).status_code, 405)
 
 

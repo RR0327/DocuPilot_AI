@@ -1,6 +1,13 @@
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
+import uuid
+
+
+def private_document_path(instance, filename):
+    """Unpredictable per-owner storage key; no user-supplied path components."""
+    extension = filename.rsplit(".", 1)[-1].lower()
+    return f"private_documents/{instance.owner_id}/{uuid.uuid4().hex}.{extension}"
 
 
 class Document(models.Model):
@@ -12,7 +19,7 @@ class Document(models.Model):
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="documents")
     title = models.CharField(max_length=255)
-    # File upload is intentionally postponed until Phase 1; no arbitrary path is exposed.
+    file = models.FileField(upload_to=private_document_path, blank=True, max_length=512)
     file_type = models.CharField(max_length=20, default="pdf")
     original_filename = models.CharField(max_length=255, blank=True)
     processing_status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
