@@ -186,3 +186,8 @@ Tests: `python manage.py check && python manage.py migrate && python manage.py m
 ## Phase 1 Step 2 — Text extraction
 
 Authenticated users can call `POST /api/documents/{id}/extract/` to extract text from an uploaded text-based PDF or UTF-8 TXT document. Extracted pages are stored in SQLite `DocumentPage` rows and available from `GET /api/documents/{id}/pages/`, protected by owner authorization. PDF page numbers are 1-based; TXT has a single logical page. Reprocessing replaces existing pages; malformed or scanned PDFs return HTTP 422 and `failed` status. OCR will be implemented in Phase 2. See [Windows 11 testing](PHASE1_STEP2_TESTING.md).
+
+
+## Phase 1 Step 3 — Rule-based invoice intelligence
+
+After a document's text extraction completes, authenticated owners can call `POST /api/documents/{id}/invoice/extract/` to create an unreviewed `ExtractedRecord` with invoice number, supplier, invoice date, subtotal, tax, total, due date, currency, missing field markers, and page-level source excerpts. `GET /api/invoices/` lists the owner's records (optional `?document_id=...`). Values not explicitly recognized remain `null`; generated records are not presented as verified accounting data. Re-extracting document text removes invoice records derived from its previous text. See [Phase 1 Step 3 testing](PHASE1_STEP3_TESTING.md).
