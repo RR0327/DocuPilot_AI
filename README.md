@@ -163,7 +163,7 @@ python manage.py test --verbosity 2
 python manage.py runserver
 ```
 
-The REST API foundation includes `GET /api/documents/`, `POST /api/documents/` (metadata only), `GET /api/documents/{id}/`, `GET /api/documents/{id}/pages/`, and `GET /api/documents/{id}/records/`. These endpoints require authentication; users may access only their own documents. `POST /api/documents/upload/`, `POST /api/documents/{id}/extract/`, and `POST /api/ask/` return `501 Not Implemented` for authenticated callers. This is intentional: no file handling or AI extraction is claimed in this step.
+The REST API foundation includes `GET /api/documents/`, `POST /api/documents/` (metadata only), `GET /api/documents/{id}/`, `GET /api/documents/{id}/pages/`, and `GET /api/documents/{id}/records/`. These endpoints require authentication; users may access only their own documents. These endpoints have since been implemented in Phase 1; see the later phase sections.
 
 **Database trade-off:** SQLite is excellent for a time-constrained local prototype. PostgreSQL and pgvector remain optional future upgrades for high-concurrency production deployments or advanced vector search. Do not describe pgvector or PostgreSQL full-text search as implemented in this SQLite release.
 
@@ -191,3 +191,8 @@ Authenticated users can call `POST /api/documents/{id}/extract/` to extract text
 ## Phase 1 Step 3 — Rule-based invoice intelligence
 
 After a document's text extraction completes, authenticated owners can call `POST /api/documents/{id}/invoice/extract/` to create an unreviewed `ExtractedRecord` with invoice number, supplier, invoice date, subtotal, tax, total, due date, currency, missing field markers, and page-level source excerpts. `GET /api/invoices/` lists the owner's records (optional `?document_id=...`). Values not explicitly recognized remain `null`; generated records are not presented as verified accounting data. Re-extracting document text removes invoice records derived from its previous text. See [Phase 1 Step 3 testing](PHASE1_STEP3_TESTING.md).
+
+
+## Phase 1 Step 4 — SQLite keyword retrieval and evidence Q&A
+
+The authenticated `POST /api/ask/` endpoint accepts `{"question": "...", "document_ids": [1]}` (optional `document_ids`) and returns the closest exact passage with document title, ID, page number, and excerpts. If no matching evidence exists, the API explicitly says so. Questions and citations are stored in the existing `QuestionAnswer` model. Re-extraction rebuilds indexed `DocumentChunk` rows transactionally from the newly extracted pages. This is deterministic extractive retrieval, **not a semantic or LLM-generated answer**: results may be incomplete for paraphrases or indirect questions, and lexical overlap does not guarantee the passage answers the question. See [Step 4 Windows testing](PHASE1_STEP4_TESTING.md).
