@@ -1,6 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import DocumentViewSet, ask, health, upload
+from .views import DocumentViewSet, ask, health, upload, invoices
 
 router = DefaultRouter()
 router.register("documents", DocumentViewSet, basename="document")
@@ -8,5 +8,6 @@ urlpatterns = [
     path("health/", health, name="health"),
     path("documents/upload/", upload, name="document-upload"),
     path("ask/", ask, name="ask"),
+    path("invoices/", invoices, name="invoices"),
     path("", include(router.urls)),
 ]

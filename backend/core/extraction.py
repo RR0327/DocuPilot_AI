@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import fitz
 from django.db import transaction
 
-from .models import Document, DocumentPage
+from .models import Document, DocumentPage, ExtractedRecord
 
 
 MAX_PDF_PAGES = 500
@@ -86,6 +86,7 @@ def extract_document(document):
     try:
         pages = _extract_pages(document)
         with transaction.atomic():
+            ExtractedRecord.objects.filter(document=document, record_type="invoice").delete()
             DocumentPage.objects.filter(document=document).delete()
             DocumentPage.objects.bulk_create([
                 DocumentPage(document=document, page_number=number, extracted_text=text)
