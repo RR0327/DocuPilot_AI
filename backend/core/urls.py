@@ -1,4 +1,12 @@
-from django.urls import path
-from .views import health
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+from .views import DocumentViewSet, ask, health, upload
 
-urlpatterns = [path("health/", health, name="health")]
+router = DefaultRouter()
+router.register("documents", DocumentViewSet, basename="document")
+urlpatterns = [
+    path("health/", health, name="health"),
+    path("documents/upload/", upload, name="document-upload"),
+    path("ask/", ask, name="ask"),
+    path("", include(router.urls)),
+]
