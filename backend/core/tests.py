@@ -55,7 +55,7 @@ class DocumentApiTests(TestCase):
     def test_not_implemented_endpoints_do_not_fake_success(self):
         self.client.force_authenticate(self.alice)
         doc = Document.objects.create(owner=self.alice, title="Invoice")
-        self.assertEqual(self.client.post("/api/ask/").status_code, 501)
+        self.assertEqual(self.client.post("/api/ask/").status_code, 400)
         self.assertEqual(self.client.post(f"/api/documents/{doc.pk}/extract/").status_code, 422)
 
     def test_metadata_can_be_deleted_but_not_patched(self):

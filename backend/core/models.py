@@ -61,3 +61,18 @@ class QuestionAnswer(models.Model):
     answer = models.TextField()
     source_references = models.JSONField(default=list)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class DocumentChunk(models.Model):
+    """Exact page-text slice indexed for deterministic owner-scoped retrieval."""
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="chunks")
+    page_number = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    chunk_index = models.PositiveIntegerField()
+    start_offset = models.PositiveIntegerField()
+    end_offset = models.PositiveIntegerField()
+    content = models.TextField()
+
+    class Meta:
+        ordering = ["document_id", "page_number", "chunk_index"]
+        constraints = [models.UniqueConstraint(fields=["document", "page_number", "chunk_index"], name="unique_document_chunk")]
+        indexes = [models.Index(fields=["document", "page_number"], name="chunk_doc_page_idx")]

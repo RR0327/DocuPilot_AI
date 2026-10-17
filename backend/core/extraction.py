@@ -8,6 +8,7 @@ import fitz
 from django.db import transaction
 
 from .models import Document, DocumentPage, ExtractedRecord
+from .search import rebuild_document_chunks
 
 
 MAX_PDF_PAGES = 500
@@ -92,6 +93,7 @@ def extract_document(document):
                 DocumentPage(document=document, page_number=number, extracted_text=text)
                 for number, text in pages
             ])
+            rebuild_document_chunks(document)
             document.processing_status = Document.Status.COMPLETED
             document.save(update_fields=["processing_status"])
         return ExtractionSummary(document.id, document.processing_status, len(pages), sum(len(t) for _, t in pages))
