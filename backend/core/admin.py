@@ -6,3 +6,6 @@ admin.site.register(DocumentPage)
 admin.site.register(ExtractedRecord)
 admin.site.register(QuestionAnswer)
 admin.site.register(DocumentChunk)
+
+from .models import InvoicePaymentState
+admin.site.register(InvoicePaymentState)

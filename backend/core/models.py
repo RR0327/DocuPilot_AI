@@ -76,3 +76,16 @@ class DocumentChunk(models.Model):
         ordering = ["document_id", "page_number", "chunk_index"]
         constraints = [models.UniqueConstraint(fields=["document", "page_number", "chunk_index"], name="unique_document_chunk")]
         indexes = [models.Index(fields=["document", "page_number"], name="chunk_doc_page_idx")]
+
+
+class InvoicePaymentState(models.Model):
+    """User-entered payment state; never inferred from extraction or due dates."""
+    class State(models.TextChoices):
+        UNKNOWN = "unknown", "Unknown"
+        PENDING = "pending", "Pending"
+        PAID = "paid", "Paid"
+        DISPUTED = "disputed", "Disputed"
+
+    record = models.OneToOneField(ExtractedRecord, on_delete=models.CASCADE, related_name="payment_state")
+    status = models.CharField(max_length=12, choices=State.choices, default=State.UNKNOWN)
+    updated_at = models.DateTimeField(auto_now=True)

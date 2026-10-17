@@ -1,11 +1,14 @@
 from rest_framework import status, viewsets
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from .invoice_dashboard import dashboard, export_csv, filtered_invoices
 from rest_framework.decorators import api_view, permission_classes, action, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from .extraction import ExtractionError, extract_document
 from .invoice_extraction import InvoiceError, extract_invoice
-from .models import Document, ExtractedRecord, QuestionAnswer
+from .models import Document, ExtractedRecord, QuestionAnswer, InvoicePaymentState
 from .search import MAX_QUERY_LENGTH, retrieve, answer_from_evidence
 from .serializers import DocumentSerializer, DocumentPageSerializer, ExtractedRecordSerializer, UploadDocumentSerializer
 
@@ -121,3 +124,43 @@ def invoices(request):
         "document_id": record.document_id,
         **ExtractedRecordSerializer(record).data,
     } for record in records[:200]])
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def invoice_dashboard(request):
+    return Response(dashboard(request.user))
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def invoice_report(request):
+    try:
+        rows = filtered_invoices(request.user, request.query_params)
+    except ValueError as exc:
+        return Response({"detail": str(exc)}, status=400)
+    return Response({"count": len(rows), "results": rows})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def invoice_export(request):
+    try:
+        rows = filtered_invoices(request.user, request.query_params)
+    except ValueError as exc:
+        return Response({"detail": str(exc)}, status=400)
+    response = HttpResponse(export_csv(rows), content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = 'attachment; filename="docupilot_invoices.csv"'
+    response["Cache-Control"] = "no-store"
+    return response
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+def invoice_payment_status(request, record_id):
+    record = get_object_or_404(ExtractedRecord, pk=record_id, record_type="invoice", document__owner=request.user)
+    new_status = request.data.get("payment_status")
+    if new_status not in InvoicePaymentState.State.values or len(request.data) != 1:
+        return Response({"payment_status": ["Use exactly one valid status: unknown, pending, paid or disputed."]}, status=400)
+    state, _ = InvoicePaymentState.objects.update_or_create(record=record, defaults={"status": new_status})
+    return Response({"record_id": record.pk, "payment_status": state.status, "updated_at": state.updated_at})
