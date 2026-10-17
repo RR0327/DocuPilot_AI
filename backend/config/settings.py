@@ -36,3 +36,8 @@ TIME_ZONE = "UTC"
 USE_TZ = True
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Documents are intentionally private: do not expose MEDIA_URL or serve this root.
+MEDIA_ROOT = BASE_DIR / "private_media"
+DATA_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024
