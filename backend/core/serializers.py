@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from .ocr import OCRError, validate_image
 from .models import Document, DocumentPage, ExtractedRecord, QuestionAnswer
 
 MAX_DOCUMENT_BYTES = 10 * 1024 * 1024
@@ -8,8 +9,8 @@ def validated_document_file(value):
     """Validate actual bytes, not attacker-controlled extension or content type."""
     name = str(value.name).replace("\\", "/").split("/")[-1]
     suffix = name.rsplit(".", 1)[-1].lower() if "." in name else ""
-    if suffix not in ("pdf", "txt"):
-        raise serializers.ValidationError("Only .pdf and .txt files are allowed")
+    if suffix not in ("pdf", "txt", "png", "jpg", "jpeg"):
+        raise serializers.ValidationError("Only PDF, TXT, PNG and JPEG files are allowed")
     if value.size == 0 or value.size > MAX_DOCUMENT_BYTES:
         raise serializers.ValidationError("File must be between 1 byte and 10 MiB")
     position = value.tell()
@@ -18,6 +19,11 @@ def validated_document_file(value):
         if suffix == "pdf":
             if not value.read(5) == b"%PDF-":
                 raise serializers.ValidationError("Invalid PDF signature")
+        elif suffix in ("png", "jpg", "jpeg"):
+            try:
+                validate_image(value.read(), "png" if suffix == "png" else "jpeg")
+            except OCRError as exc:
+                raise serializers.ValidationError(str(exc)) from exc
         else:
             try:
                 text = value.read().decode("utf-8", errors="strict")
@@ -48,8 +54,8 @@ class DocumentSerializer(serializers.ModelSerializer):
         return value
 
     def validate_file_type(self, value):
-        if value.lower() not in ("pdf", "txt"):
-            raise serializers.ValidationError("Only PDF and TXT metadata types are supported")
+        if value.lower() not in ("pdf", "txt", "png", "jpg", "jpeg"):
+            raise serializers.ValidationError("Only PDF, TXT, PNG and JPEG metadata types are supported")
         return value.lower()
 
 

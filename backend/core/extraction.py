@@ -9,6 +9,7 @@ from django.db import transaction
 
 from .models import Document, DocumentPage, ExtractedRecord
 from .search import rebuild_document_chunks
+from .ocr import OCRError, MAX_OCR_PAGES, ocr_image_bytes, ocr_pdf_page
 
 
 MAX_PDF_PAGES = 500
@@ -45,6 +46,18 @@ def _extract_pages(document):
             raise ExtractionError("Document contains no extractable text")
         # A TXT file is one logical page because it has no physical pagination.
         return [(1, text)]
+    if document.file_type in ("png", "jpg", "jpeg"):
+        try:
+            with document.file.open("rb") as stream:
+                raw = stream.read(10 * 1024 * 1024 + 1)
+            if len(raw) > 10 * 1024 * 1024:
+                raise ExtractionError("Image exceeds the 10 MiB limit")
+            text = ocr_image_bytes(raw, "png" if document.file_type == "png" else "jpeg")
+            if not text.strip():
+                raise ExtractionError("OCR found no readable text in the image")
+            return [(1, text)]
+        except OCRError as exc:
+            raise ExtractionError(str(exc)) from exc
     if document.file_type != "pdf":
         raise ExtractionError("Unsupported document type")
     try:
@@ -60,13 +73,22 @@ def _extract_pages(document):
                 raise ExtractionError("Password-protected PDFs are not supported")
             if len(pdf) == 0 or len(pdf) > MAX_PDF_PAGES:
                 raise ExtractionError("PDF page count is outside supported limits")
+            ocr_count = 0
             for number, page in enumerate(pdf, start=1):
                 content = page.get_text("text", sort=True)
+                if not content.strip():
+                    ocr_count += 1
+                    if ocr_count > MAX_OCR_PAGES:
+                        raise ExtractionError("PDF exceeds the 50-page OCR limit")
+                    try:
+                        content = ocr_pdf_page(page)
+                    except OCRError as exc:
+                        raise ExtractionError(str(exc)) from exc
                 if len(content) > MAX_PAGE_TEXT_CHARS:
                     raise ExtractionError("A PDF page exceeds the text extraction limit")
                 pages.append((number, content))
         if not any(text.strip() for _, text in pages):
-            raise ExtractionError("No extractable text found; scanned PDFs require OCR")
+            raise ExtractionError("No readable text found after PDF extraction and OCR")
         return pages
     except (fitz.FileDataError, fitz.EmptyFileError, fitz.FileNotFoundError, OSError, ValueError) as exc:
         raise ExtractionError("PDF document is corrupt or cannot be opened") from exc
