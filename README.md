@@ -1,210 +1,104 @@
 # DocuPilot AI
 
 **Intelligent Document Processing & Knowledge Assistant**  
-**Maintained by:** Tech_Innovators  
-**Status:** Phase 1 Step 5 — Invoice Intelligence backend MVP
+**Copyright © 2026 Tech_Innovators** · **Phase 1 Step 6 — React MVP workspace**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Contributing](https://img.shields.io/badge/Contributing-Guidelines-2ea44f)](CONTRIBUTING.md)
-[![Security](https://img.shields.io/badge/Security-Policy-orange)](SECURITY.md)
+[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Contributing](https://img.shields.io/badge/Contributing-Guidelines-green.svg)](CONTRIBUTING.md)
+[![Security](https://img.shields.io/badge/Security-Policy-orange.svg)](SECURITY.md)
 
-[License](LICENSE) · [Contributing Guidelines](CONTRIBUTING.md) · [Security Policy](SECURITY.md)
-
-> **Development notice:** Phase 1 Step 5 provides document upload, extraction, invoice parsing, keyword Q&A, owner-scoped invoice reports, manual payment-status control, and CSV export. Do not upload confidential or regulated documents to a publicly deployed development build.
+[License](LICENSE) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ## Overview
 
-DocuPilot AI is an open-source project to help organizations upload business documents, extract structured information, search relevant passages, and answer questions with traceable document and page references. The goal is evidence-grounded document intelligence rather than unsupported chatbot responses.
+DocuPilot AI is a Django + React document intelligence application. Authorized users can upload private text-based PDF and UTF-8 TXT files, extract page text, parse selected invoice fields, search indexed passages, ask extractive questions with document/page references, and review invoice payment status and due dates. SQLite3 is the default database; **PostgreSQL is not required**.
 
-**Example use cases (planned):**
-- Extract invoice number, supplier, dates, subtotal, tax, and total amount.
-- Find invoices approaching or past their payment due date.
-- Ask questions about policies, reports, and manuals with page-level citations.
-- Review extracted information and export invoice records.
+### Current MVP capabilities
 
-## Current capabilities
+- Django REST Framework backend and React + Vite + Tailwind frontend.
+- React sign-in using existing Django username/password and HTTP Basic authentication. **Credentials are held in React memory only** and cleared on sign-out or reload. No persistent tokens or passwords are stored.
+- Private owner-isolated PDF/TXT upload, listing, deletion, page extraction, invoice field extraction.
+- Document chunk indexing and SQLite-compatible keyword retrieval; extractive answers with supporting document/page excerpts.
+- Invoice dashboard with owner-set payment status (`unknown`, `pending`, `paid`, `disputed`), due-date filters, currency-separated pending totals, and CSV export.
+- Error, loading and empty states; mobile-responsive frontend; frontend API regression tests and backend Django tests.
 
-- Django REST Framework backend with a health endpoint at `/api/health/`.
-- React + Vite + Tailwind CSS starter frontend, connected to the API through a Vite proxy.
-- Backend smoke tests and React production-build command.
-- Django default SQLite3 database, Django migrations, document metadata models, and owner-isolated authenticated API scaffolding.
-- File upload and AI functions return HTTP 501 until their Phase 1 implementations are delivered.
+**Limitations:** This is a local-development MVP, not a production-secure deployment. HTTP Basic credentials are transmitted in an Authorization header on every request; **never expose this service without TLS/HTTPS and a reviewed authentication model**. Scanned PDFs require future OCR. Keyword Q&A is extractive, not an LLM answer. Financial fields require human verification. The document listing currently shows the first page (20 documents) from Django's paginated API. The React invoice dashboard uses backend APIs rather than direct DB access.
 
-**Not implemented yet:** document upload, parsing, invoice extraction, Q&A, authentication workflows, OCR, semantic retrieval, production deployment.
+## Technology
 
-## Planned technology stack
-
-| Layer | Technology |
+| Layer | Stack |
 | --- | --- |
-| Frontend | React, Vite, Tailwind CSS |
-| Backend/API | Python, Django, Django REST Framework |
-| Database | SQLite3 (Django default; no separate installation) |
-| Document extraction | PyMuPDF, Pydantic (planned) |
-| Search | SQLite-backed metadata; keyword retrieval planned for MVP; hybrid/semantic search later |
-| OCR | Tesseract or EasyOCR (Phase 2) |
-| Async jobs | Celery and Redis (Phase 3) |
-| Analytics | Recharts (Phase 3) |
-| Deployment target | Vercel frontend, Render backend (subject to production review) |
+| Frontend | React 19, Vite 6, Tailwind CSS 3 |
+| Backend | Django, Django REST Framework |
+| Database | SQLite3 |
+| Extraction | PyMuPDF + deterministic Python rules |
+| Search | SQLite-compatible keyword chunks |
+| Auth | DRF Basic authentication in the development frontend; session authentication supported by backend |
 
-## Roadmap
+## Windows 11 quick start
 
-| Phase | Scope | Status |
-| --- | --- | --- |
-| 0 — Foundation | Starter frontend/backend, SQLite configuration, models, migration and API scaffolding | In progress |
-| 1 — MVP | Document workspace, text-based PDF extraction, structured invoice records, evidence-linked Q&A, filtering and CSV export | Planned |
-| 2 — Advanced processing | OCR, semantic/hybrid retrieval, highlighted evidence viewer, invoice line items | Planned |
-| 3 — Operations | Human review queue, supplier analytics, background processing | Planned |
-| 4 — Enterprise | Classification, multi-document Q&A, roles/permissions, audit logs | Planned |
-| 5 — Production readiness | Hardening, deployment checks, documentation and release handoff | Planned extension |
+Prerequisites: Python 3.12, Node.js 22 LTS (or a compatible current LTS release), npm, and PowerShell.
 
-## Getting started on Windows 11
-
-### Prerequisites
-
-- Python 3.12
-- Node.js 22 LTS or newer and npm
-- PowerShell / Windows Terminal
-- Git (recommended)
-
-### 1. Clone and configure
-
-```powershell
-git clone https://github.com/YOUR_GITHUB_USERNAME/docupilot-ai.git
-cd docupilot-ai
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r backend/requirements.txt
-Copy-Item .env.example .env
-```
-
-Replace `YOUR_GITHUB_USERNAME` with the account or organization that hosts this project. If working from a downloaded ZIP instead, open PowerShell in the extracted `DocuPilot_AI` directory and skip `git clone` and `cd docupilot-ai`.
-
-The `.env` file is for local configuration and must **never** be committed. Change example credentials before any public deployment.
-
-### 2. Run and test the backend
-
-```powershell
-cd backend
-python manage.py check
-python manage.py migrate
-python manage.py test
-python manage.py runserver
-```
-
-Expected: the system check completes without issues, the tests pass, and the server listens on `http://127.0.0.1:8000/`.
-
-Health check: [http://127.0.0.1:8000/api/health/](http://127.0.0.1:8000/api/health/)
-
-### 3. Run the frontend (a second PowerShell terminal)
-
-From the repository root:
-
-```powershell
-cd frontend
-npm install
-npm run build
-npm run dev
-```
-
-Visit [http://localhost:5173](http://localhost:5173). With the backend running, the starter UI should show **Backend connected**.
-
-## Planned API endpoints
-
-The following endpoints are from the project proposal and are **not all available in this starter build**:
-
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| POST | `/api/documents/upload/` | Upload documents |
-| GET | `/api/documents/` | List documents |
-| GET | `/api/documents/{id}/` | Document details |
-| POST | `/api/documents/{id}/extract/` | Structured extraction |
-| GET | `/api/documents/{id}/pages/` | Extracted pages and references |
-| POST | `/api/ask/` | Evidence-grounded Q&A |
-| GET | `/api/invoices/` | Invoice records |
-| GET | `/api/invoices/export/` | CSV export |
-
-## Responsible handling of information
-
-This software is under active development. Planned safeguards include file validation, authorization, tenant/document isolation, auditability, evidence citations, and secure handling of uploaded files. **Some authorization scaffolding exists, but these safeguards are not complete.** Do not use this starter to process sensitive business data in production.
-
-## Project documentation
-
-- [License — MIT](LICENSE): terms for use, modification, and distribution.
-- [Contributing Guidelines](CONTRIBUTING.md): development workflow and pull request expectations.
-- [Security Policy](SECURITY.md): supported releases and vulnerability reporting guidance.
-
-## Ownership and license
-
-Copyright (c) 2026 **Tech_Innovators**.
-
-Released under the [MIT License](LICENSE). Copyright ownership remains with Tech_Innovators for its original contributions; the MIT License permits reuse subject to its terms. Third-party dependencies retain their own licenses.
-
-## Acknowledgments
-
-Based on the **DocuPilot AI — Intelligent Document Processing & Knowledge Assistant** project proposal and roadmap.
-
-
-## Phase 0 Step 2 — SQLite3 and document API foundation
-
-SQLite3 is now the only configured database. It is included in Python and requires no PostgreSQL installation, server, credentials, or separate database creation. Running `python manage.py migrate` creates `backend/db.sqlite3` automatically. Do not commit this file to Git or deploy it as a multi-instance production database.
-
-Run from the repository root in Windows PowerShell:
+**Backend — terminal 1**, from repository root:
 
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r backend/requirements.txt
-Copy-Item .env.example .env  # Skip if .env already exists; remove old POSTGRES_ entries
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
 cd backend
 python manage.py check
 python manage.py migrate
 python manage.py makemigrations --check --dry-run
 python manage.py test --verbosity 2
+python manage.py createsuperuser  # only once; skip if you already have an account
 python manage.py runserver
 ```
 
-The REST API foundation includes `GET /api/documents/`, `POST /api/documents/` (metadata only), `GET /api/documents/{id}/`, `GET /api/documents/{id}/pages/`, and `GET /api/documents/{id}/records/`. These endpoints require authentication; users may access only their own documents. These endpoints have since been implemented in Phase 1; see the later phase sections.
+Preserve existing `.env` and `backend/db.sqlite3` when upgrading. Keep the SQLite database and `backend/private_media` files together when backing up user data.
 
-**Database trade-off:** SQLite is excellent for a time-constrained local prototype. PostgreSQL and pgvector remain optional future upgrades for high-concurrency production deployments or advanced vector search. Do not describe pgvector or PostgreSQL full-text search as implemented in this SQLite release.
+**Frontend — terminal 2**, from repository root:
 
+```powershell
+cd frontend
+npm install
+npm test
+npm run build
+npm run dev
+```
 
-## Phase 1 Step 1 — secure uploads (SQLite3)
+Open http://localhost:5173, sign in with your Django superuser or other existing account, upload a PDF/TXT, select **Extract text**, then optionally **Extract invoice**, **Ask documents**, or open **Invoice intelligence**. The Vite dev server proxies `/api` to `http://127.0.0.1:8000`, avoiding a separate CORS setup in local development.
 
-The API supports private PDF and UTF-8 TXT uploads up to 10 MiB. File storage lives under `backend/private_media` and is never exposed by Django's public URL configuration. The file name and internal file location are not returned in API responses. The original display name is stored separately. Extraction and Q&A are still upcoming steps.
+For a complete end-to-end verification matrix and troubleshooting, see [PHASE1_STEP6_TESTING.md](PHASE1_STEP6_TESTING.md).
 
-Authenticated endpoints:
-- `POST /api/documents/upload/` — multipart form with required `file` and optional `title`; returns 201.
-- `GET /api/documents/` — paginated documents owned by the authenticated account.
-- `GET /api/documents/{id}/` — metadata for an owned document.
-- `DELETE /api/documents/{id}/` — delete owned metadata and stored file; returns 204.
+## API endpoints
 
-For a quick local smoke test, create a Django superuser (`python manage.py createsuperuser`) and use DRF's browsable API at `/api/documents/upload/` while authenticated via `/api-auth/login/` if configured, or use HTTP Basic authentication with curl. Never commit passwords or actual business documents.
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/health/` | Health check |
+| POST | `/api/documents/upload/` | Upload PDF or TXT |
+| GET | `/api/documents/` | List owned documents (paginated) |
+| GET / DELETE | `/api/documents/{id}/` | Document metadata / delete |
+| POST | `/api/documents/{id}/extract/` | Extract and index text |
+| GET | `/api/documents/{id}/pages/` | Retrieve extracted page text |
+| POST | `/api/documents/{id}/invoice/extract/` | Extract invoice fields |
+| POST | `/api/ask/` | Evidence-grounded extractive answer |
+| GET | `/api/invoices/dashboard/` | Invoice counts and pending balances |
+| GET | `/api/invoices/report/` | Filter invoices |
+| GET | `/api/invoices/export/` | CSV export |
+| PATCH | `/api/invoices/{record_id}/payment-status/` | Set owner-verified payment status |
 
-Tests: `python manage.py check && python manage.py migrate && python manage.py makemigrations --check --dry-run && python manage.py test --verbosity 2`.
+## Roadmap
 
+| Phase | Scope | Status |
+| --- | --- | --- |
+| 0 | Foundation, SQLite3 models and migration | Complete |
+| 1 | Secure upload, extraction, invoice parsing, keyword Q&A, reporting, React MVP | Step 6 packaged; verify locally |
+| 2 | OCR, semantic/hybrid retrieval, highlighted evidence, line items | Planned |
+| 3 | Review queue, supplier analytics, async tasks | Planned |
+| 4 | Classification, multi-document Q&A, RBAC, audit logs | Planned |
+| 5 | Deployment and production readiness review | Planned extension |
 
-## Phase 1 Step 2 — Text extraction
+## Repository governance
 
-Authenticated users can call `POST /api/documents/{id}/extract/` to extract text from an uploaded text-based PDF or UTF-8 TXT document. Extracted pages are stored in SQLite `DocumentPage` rows and available from `GET /api/documents/{id}/pages/`, protected by owner authorization. PDF page numbers are 1-based; TXT has a single logical page. Reprocessing replaces existing pages; malformed or scanned PDFs return HTTP 422 and `failed` status. OCR will be implemented in Phase 2. See [Windows 11 testing](PHASE1_STEP2_TESTING.md).
-
-
-## Phase 1 Step 3 — Rule-based invoice intelligence
-
-After a document's text extraction completes, authenticated owners can call `POST /api/documents/{id}/invoice/extract/` to create an unreviewed `ExtractedRecord` with invoice number, supplier, invoice date, subtotal, tax, total, due date, currency, missing field markers, and page-level source excerpts. `GET /api/invoices/` lists the owner's records (optional `?document_id=...`). Values not explicitly recognized remain `null`; generated records are not presented as verified accounting data. Re-extracting document text removes invoice records derived from its previous text. See [Phase 1 Step 3 testing](PHASE1_STEP3_TESTING.md).
-
-
-## Phase 1 Step 4 — SQLite keyword retrieval and evidence Q&A
-
-The authenticated `POST /api/ask/` endpoint accepts `{"question": "...", "document_ids": [1]}` (optional `document_ids`) and returns the closest exact passage with document title, ID, page number, and excerpts. If no matching evidence exists, the API explicitly says so. Questions and citations are stored in the existing `QuestionAnswer` model. Re-extraction rebuilds indexed `DocumentChunk` rows transactionally from the newly extracted pages. This is deterministic extractive retrieval, **not a semantic or LLM-generated answer**: results may be incomplete for paraphrases or indirect questions, and lexical overlap does not guarantee the passage answers the question. See [Step 4 Windows testing](PHASE1_STEP4_TESTING.md).
-
-
-## Phase 1 Step 5 — Invoice intelligence (implemented)
-
-See [Windows testing guide](PHASE1_STEP5_TESTING.md). New APIs:
-
-- `GET /api/invoices/dashboard/` — owner-scoped counts and pending totals per currency.
-- `GET /api/invoices/report/` — filter by `payment_status`, `due`, `due_from`, `due_to`, `document_id`.
-- `GET /api/invoices/export/` — equivalent filters, downloadable CSV with spreadsheet formula safeguards.
-- `PATCH /api/invoices/{record_id}/payment-status/` — explicitly set `unknown`, `pending`, `paid` or `disputed`.
-
-Payment status **is not extracted or inferred**. New records default to `unknown` until the owner assigns a status. An invoice counts as overdue only when explicitly pending with a past due date; other past due dates are marked `past_due_unconfirmed`. Monetary totals are not converted between currencies and exclude missing or invalid amounts. Extracted fields still require human validation. The original `/api/invoices/` endpoint remains compatible.
+© 2026 **Tech_Innovators**. Released under the [MIT License](LICENSE). See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution practices and [SECURITY.md](SECURITY.md) for vulnerability disclosure. Do not upload sensitive or regulated documents into public demonstration instances.
