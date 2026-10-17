@@ -181,3 +181,8 @@ Authenticated endpoints:
 For a quick local smoke test, create a Django superuser (`python manage.py createsuperuser`) and use DRF's browsable API at `/api/documents/upload/` while authenticated via `/api-auth/login/` if configured, or use HTTP Basic authentication with curl. Never commit passwords or actual business documents.
 
 Tests: `python manage.py check && python manage.py migrate && python manage.py makemigrations --check --dry-run && python manage.py test --verbosity 2`.
+
+
+## Phase 1 Step 2 — Text extraction
+
+Authenticated users can call `POST /api/documents/{id}/extract/` to extract text from an uploaded text-based PDF or UTF-8 TXT document. Extracted pages are stored in SQLite `DocumentPage` rows and available from `GET /api/documents/{id}/pages/`, protected by owner authorization. PDF page numbers are 1-based; TXT has a single logical page. Reprocessing replaces existing pages; malformed or scanned PDFs return HTTP 422 and `failed` status. OCR will be implemented in Phase 2. See [Windows 11 testing](PHASE1_STEP2_TESTING.md).
