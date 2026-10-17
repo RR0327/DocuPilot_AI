@@ -1,0 +1,7 @@
+﻿Supplier: Example Ltd
+Invoice No: INV-2026-014
+Invoice Date: 2026-10-12
+Due Date: 2026-11-11
+Subtotal: BDT 200.00
+Tax: BDT 30.00
+Total Amount: BDT 230.00
