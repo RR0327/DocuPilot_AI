@@ -37,6 +37,9 @@ USE_TZ = True
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+DOCUPILOT_TESSERACT_CMD = os.getenv("DOCUPILOT_TESSERACT_CMD", "")
+DOCUPILOT_OCR_LANG = os.getenv("DOCUPILOT_OCR_LANG", "eng")
+
 # Documents are intentionally private: do not expose MEDIA_URL or serve this root.
 MEDIA_ROOT = BASE_DIR / "private_media"
 DATA_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
