@@ -109,3 +109,8 @@ For a complete end-to-end verification matrix and troubleshooting, see [PHASE1_S
 Frontend document pagination now loads all owner-scoped pages. Client-side PDF/TXT size and extension checks provide early feedback (backend remains authoritative). The browser E2E contract suite covers authentication, text extraction, source-grounded Q&A and upload validation. See [Phase 1 Step 7 testing](PHASE1_STEP7_TESTING.md).
 
 **Release status:** MVP release candidate for local demonstration only. Production deployment remains blocked pending live E2E, backup restoration, authentication hardening and security checks.
+
+
+## Phase 2 Step 1 — Local OCR (PDF and images)
+
+Supports scanned PDFs (page-wise fallback to OCR), PNG and JPEG using **Tesseract + pytesseract + Pillow**, with the original PyMuPDF/TXT extraction intact. Files stay private. See [Phase 2 Step 1 Windows 11 testing](PHASE2_STEP1_TESTING.md) for setup, verification and OCR limitations. On Windows install Tesseract separately; set `DOCUPILOT_TESSERACT_CMD` when its executable is not on PATH. Optional Bangla recognition requires `ben.traineddata`. Existing [LICENSE](LICENSE), [CONTRIBUTING.md](CONTRIBUTING.md), and [SECURITY.md](SECURITY.md) links remain active.
