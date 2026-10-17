@@ -166,3 +166,18 @@ python manage.py runserver
 The REST API foundation includes `GET /api/documents/`, `POST /api/documents/` (metadata only), `GET /api/documents/{id}/`, `GET /api/documents/{id}/pages/`, and `GET /api/documents/{id}/records/`. These endpoints require authentication; users may access only their own documents. `POST /api/documents/upload/`, `POST /api/documents/{id}/extract/`, and `POST /api/ask/` return `501 Not Implemented` for authenticated callers. This is intentional: no file handling or AI extraction is claimed in this step.
 
 **Database trade-off:** SQLite is excellent for a time-constrained local prototype. PostgreSQL and pgvector remain optional future upgrades for high-concurrency production deployments or advanced vector search. Do not describe pgvector or PostgreSQL full-text search as implemented in this SQLite release.
+
+
+## Phase 1 Step 1 — secure uploads (SQLite3)
+
+The API supports private PDF and UTF-8 TXT uploads up to 10 MiB. File storage lives under `backend/private_media` and is never exposed by Django's public URL configuration. The file name and internal file location are not returned in API responses. The original display name is stored separately. Extraction and Q&A are still upcoming steps.
+
+Authenticated endpoints:
+- `POST /api/documents/upload/` — multipart form with required `file` and optional `title`; returns 201.
+- `GET /api/documents/` — paginated documents owned by the authenticated account.
+- `GET /api/documents/{id}/` — metadata for an owned document.
+- `DELETE /api/documents/{id}/` — delete owned metadata and stored file; returns 204.
+
+For a quick local smoke test, create a Django superuser (`python manage.py createsuperuser`) and use DRF's browsable API at `/api/documents/upload/` while authenticated via `/api-auth/login/` if configured, or use HTTP Basic authentication with curl. Never commit passwords or actual business documents.
+
+Tests: `python manage.py check && python manage.py migrate && python manage.py makemigrations --check --dry-run && python manage.py test --verbosity 2`.
