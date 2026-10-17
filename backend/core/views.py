@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes, action, pars
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from .extraction import ExtractionError, extract_document
 from .models import Document
 from .serializers import DocumentSerializer, DocumentPageSerializer, ExtractedRecordSerializer, UploadDocumentSerializer
 
@@ -41,7 +42,19 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def extract(self, request, pk=None):
         self.get_object()
-        return Response({"detail": "Extraction is scheduled for a later Phase 1 step."}, status=status.HTTP_501_NOT_IMPLEMENTED)
+        document = self.get_object()
+        try:
+            result = extract_document(document)
+        except ExtractionError as exc:
+            return Response({"detail": str(exc), "processing_status": "failed"}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        except (OSError, ValueError):
+            return Response({"detail": "Document extraction failed", "processing_status": "failed"}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        return Response({
+            "document_id": result.document_id,
+            "processing_status": result.status,
+            "page_count": result.page_count,
+            "character_count": result.character_count,
+        })
 
 
 @api_view(["POST"])
