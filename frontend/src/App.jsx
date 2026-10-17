@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { api, documentList, queryString, triggerDownload } from './api.js';
+import { api, allDocuments, validateUpload, queryString, triggerDownload } from './api.js';
 
 const nav = [ ['documents', 'Documents'], ['invoices', 'Invoice intelligence'], ['ask', 'Ask documents'] ];
 const statuses = ['unknown', 'pending', 'paid', 'disputed'];
@@ -42,7 +42,7 @@ export default function App() {
 
   const loadDocs = useCallback(async (auth) => {
     setDocumentsBusy(true); setDocumentError('');
-    try { setDocuments(documentList(await api('/documents/', auth))); }
+    try { setDocuments(await allDocuments(auth)); }
     catch (error) { setDocumentError(authError(error)); }
     finally { setDocumentsBusy(false); }
   }, []);
@@ -66,10 +66,12 @@ export default function App() {
     finally { setLoginBusy(false); }
   }
   function logout() {
-    setCredentials(null); setPassword(''); setUsername(''); setDocuments([]); setInvoices([]); setSummary(null); setAnswer(null); setPages(null); setMessage(''); setSelectedDocs([]);
+    setCredentials(null); setTab('documents'); setPassword(''); setUsername(''); setDocuments([]); setInvoices([]); setSummary(null); setAnswer(null); setPages(null); setMessage(''); setSelectedDocs([]);
   }
   async function upload(event) {
-    event.preventDefault(); if (!file || !credentials) return;
+    event.preventDefault(); if (!credentials) return;
+    const validationError = validateUpload(file);
+    if (validationError) { setDocumentError(validationError); return; }
     const form = event.currentTarget; setUploadBusy(true); setDocumentError(''); setMessage('');
     try {
       const data = new FormData(); data.append('file', file); if (title.trim()) data.append('title', title.trim());
@@ -86,7 +88,7 @@ export default function App() {
     try {
       if (action === 'extract') {
         const data = await api(`/documents/${document.id}/extract/`, credentials, { method: 'POST' });
-        setMessage(`Extracted ${data.page_count} page(s), ${data.character_count} characters.`);
+        setPages(null); setAnswer(null); setMessage(`Extracted ${data.page_count} page(s), ${data.character_count} characters.`);
       } else if (action === 'invoice') {
         await api(`/documents/${document.id}/invoice/extract/`, credentials, { method: 'POST' });
         setMessage('Invoice fields extracted. Review the invoice dashboard before assigning payment status.');
@@ -96,7 +98,7 @@ export default function App() {
         setPages({ document, items: result });
       } else {
         await api(`/documents/${document.id}/`, credentials, { method: 'DELETE' });
-        setPages(null); setSelectedDocs(prev => prev.filter(id => id !== document.id));
+        setPages(null); setAnswer(null); setSelectedDocs(prev => prev.filter(id => id !== document.id));
         setMessage('Document permanently deleted.');
         await loadInvoices(credentials, { payment_status: statusFilter, due: dueFilter });
       }

@@ -37,6 +37,35 @@ export async function api(path, auth, options = {}) {
   return download ? response.blob() : response.status === 204 ? null : response.json();
 }
 
+/** Collect every owner-scoped document page without changing the backend API. */
+export async function allDocuments(auth, request = api) {
+  const results = [];
+  let path = '/documents/';
+  const visited = new Set();
+  while (path) {
+    if (visited.has(path) || visited.size >= 200) throw new Error('Invalid document pagination response');
+    visited.add(path);
+    const page = await request(path, auth);
+    results.push(...documentList(page));
+    if (!page || Array.isArray(page) || !page.next) break;
+    const url = new URL(page.next, 'http://localhost');
+    if (url.origin !== 'http://localhost' && url.hostname !== '127.0.0.1' && url.hostname !== 'localhost') {
+      throw new Error('Unexpected pagination destination');
+    }
+    if (!url.pathname.startsWith('/api/documents/')) throw new Error('Unexpected document pagination path');
+    path = url.pathname.slice(4) + url.search;
+  }
+  return results;
+}
+
+export function validateUpload(file) {
+  if (!file) return 'Select a PDF or TXT file.';
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['pdf', 'txt'].includes(ext)) return 'Only PDF and TXT files are supported.';
+  if (!file.size || file.size > 10 * 1024 * 1024) return 'File must be between 1 byte and 10 MiB.';
+  return '';
+}
+
 export function documentList(payload) {
   return Array.isArray(payload) ? payload : Array.isArray(payload?.results) ? payload.results : [];
 }

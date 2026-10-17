@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { basicHeader, queryString, documentList, api } from './api.js';
+import { basicHeader, queryString, documentList, allDocuments, validateUpload, api } from './api.js';
 
 test('Basic auth encodes international usernames and is not persisted', () => {
   const header = basicHeader('বাংলা', 'päss');
@@ -39,4 +39,25 @@ test('API handles backend connection loss', async () => {
   try { globalThis.fetch = async () => { throw new TypeError('Failed to fetch'); };
     await assert.rejects(api('/documents/', { username: 'u', password: 'p' }), /Cannot connect/);
   } finally { globalThis.fetch = original; }
+});
+
+test('document pagination collects every page and respects per-page request paths', async () => {
+  const called=[];
+  const result=await allDocuments({username:'u',password:'p'}, async path => {
+    called.push(path);
+    return path==='/documents/' ? {results:[{id:1}],next:'http://127.0.0.1:8000/api/documents/?page=2'} : {results:[{id:2}],next:null};
+  });
+  assert.deepEqual(result.map(d=>d.id),[1,2]);
+  assert.deepEqual(called,['/documents/','/documents/?page=2']);
+});
+test('document pagination blocks cross-origin next URL and loops', async () => {
+  await assert.rejects(allDocuments({},async()=>({results:[],next:'https://evil.test/api/documents/?page=2'})),/Unexpected pagination destination/);
+  await assert.rejects(allDocuments({},async()=>({results:[],next:'/api/documents/'})),/Invalid document pagination response/);
+});
+test('client upload validation matches server size and extensions', () => {
+  assert.match(validateUpload(null),/Select/);
+  assert.match(validateUpload({name:'x.exe',size:3}),/Only PDF/);
+  assert.match(validateUpload({name:'x.pdf',size:0}),/between/);
+  assert.match(validateUpload({name:'x.pdf',size:10*1024*1024+1}),/between/);
+  assert.equal(validateUpload({name:'x.PDF',size:100}),'');
 });
