@@ -102,3 +102,10 @@ For a complete end-to-end verification matrix and troubleshooting, see [PHASE1_S
 ## Repository governance
 
 © 2026 **Tech_Innovators**. Released under the [MIT License](LICENSE). See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution practices and [SECURITY.md](SECURITY.md) for vulnerability disclosure. Do not upload sensitive or regulated documents into public demonstration instances.
+
+
+## Phase 1 Step 7 — MVP verification
+
+Frontend document pagination now loads all owner-scoped pages. Client-side PDF/TXT size and extension checks provide early feedback (backend remains authoritative). The browser E2E contract suite covers authentication, text extraction, source-grounded Q&A and upload validation. See [Phase 1 Step 7 testing](PHASE1_STEP7_TESTING.md).
+
+**Release status:** MVP release candidate for local demonstration only. Production deployment remains blocked pending live E2E, backup restoration, authentication hardening and security checks.
