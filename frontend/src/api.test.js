@@ -61,3 +61,10 @@ test('client upload validation matches server size and extensions', () => {
   assert.match(validateUpload({name:'x.pdf',size:10*1024*1024+1}),/between/);
   assert.equal(validateUpload({name:'x.PDF',size:100}),'');
 });
+
+
+test('validates OCR image uploads', () => {
+  assert.equal(validateUpload({ name: 'scan.png', size: 1024 }), '');
+  assert.equal(validateUpload({ name: 'photo.jpeg', size: 2048 }), '');
+  assert.match(validateUpload({ name: 'bad.webp', size: 1024 }), /Only PDF/);
+});

@@ -61,7 +61,7 @@ export async function allDocuments(auth, request = api) {
 export function validateUpload(file) {
   if (!file) return 'Select a PDF or TXT file.';
   const ext = file.name.split('.').pop().toLowerCase();
-  if (!['pdf', 'txt'].includes(ext)) return 'Only PDF and TXT files are supported.';
+  if (!['pdf', 'txt', 'png', 'jpg', 'jpeg'].includes(ext)) return 'Only PDF, TXT, PNG and JPEG files are supported.';
   if (!file.size || file.size > 10 * 1024 * 1024) return 'File must be between 1 byte and 10 MiB.';
   return '';
 }
