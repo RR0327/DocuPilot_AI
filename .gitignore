@@ -9,3 +9,6 @@ dist/
 backend/db.sqlite3
 
 backend/private_media/
+
+frontend/playwright-report/
+frontend/test-results/
