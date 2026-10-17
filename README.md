@@ -2,7 +2,7 @@
 
 **Intelligent Document Processing & Knowledge Assistant**  
 **Maintained by:** Tech_Innovators  
-**Status:** Phase 0 Step 2 — SQLite and API foundation
+**Status:** Phase 1 Step 5 — Invoice Intelligence backend MVP
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Contributing](https://img.shields.io/badge/Contributing-Guidelines-2ea44f)](CONTRIBUTING.md)
@@ -10,7 +10,7 @@
 
 [License](LICENSE) · [Contributing Guidelines](CONTRIBUTING.md) · [Security Policy](SECURITY.md)
 
-> **Development notice:** This repository currently contains the Phase 0 Step 2 database and API foundation. Features described as planned below are not yet implemented. Do not upload confidential or regulated documents to this development build.
+> **Development notice:** Phase 1 Step 5 provides document upload, extraction, invoice parsing, keyword Q&A, owner-scoped invoice reports, manual payment-status control, and CSV export. Do not upload confidential or regulated documents to a publicly deployed development build.
 
 ## Overview
 
@@ -196,3 +196,15 @@ After a document's text extraction completes, authenticated owners can call `POS
 ## Phase 1 Step 4 — SQLite keyword retrieval and evidence Q&A
 
 The authenticated `POST /api/ask/` endpoint accepts `{"question": "...", "document_ids": [1]}` (optional `document_ids`) and returns the closest exact passage with document title, ID, page number, and excerpts. If no matching evidence exists, the API explicitly says so. Questions and citations are stored in the existing `QuestionAnswer` model. Re-extraction rebuilds indexed `DocumentChunk` rows transactionally from the newly extracted pages. This is deterministic extractive retrieval, **not a semantic or LLM-generated answer**: results may be incomplete for paraphrases or indirect questions, and lexical overlap does not guarantee the passage answers the question. See [Step 4 Windows testing](PHASE1_STEP4_TESTING.md).
+
+
+## Phase 1 Step 5 — Invoice intelligence (implemented)
+
+See [Windows testing guide](PHASE1_STEP5_TESTING.md). New APIs:
+
+- `GET /api/invoices/dashboard/` — owner-scoped counts and pending totals per currency.
+- `GET /api/invoices/report/` — filter by `payment_status`, `due`, `due_from`, `due_to`, `document_id`.
+- `GET /api/invoices/export/` — equivalent filters, downloadable CSV with spreadsheet formula safeguards.
+- `PATCH /api/invoices/{record_id}/payment-status/` — explicitly set `unknown`, `pending`, `paid` or `disputed`.
+
+Payment status **is not extracted or inferred**. New records default to `unknown` until the owner assigns a status. An invoice counts as overdue only when explicitly pending with a past due date; other past due dates are marked `past_due_unconfirmed`. Monetary totals are not converted between currencies and exclude missing or invalid amounts. Extracted fields still require human validation. The original `/api/invoices/` endpoint remains compatible.
