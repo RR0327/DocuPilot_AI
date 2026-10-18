@@ -258,3 +258,12 @@ This archive includes a new [handoff documentation suite](handoff/00_SUBMISSION_
 [Architecture and system design](handoff/01_ARCHITECTURE_AND_SYSTEM_DESIGN.md) · [Windows setup/deployment](handoff/02_WINDOWS_DEPLOYMENT_GUIDE.md) · [Demo script](handoff/03_DEMONSTRATION_SCRIPT.md) · [Testing evidence index](handoff/04_TESTING_EVIDENCE_INDEX.md) · [Security and limitations](handoff/05_SECURITY_PRIVACY_AND_LIMITATIONS.md) · [Backup and recovery](handoff/06_BACKUP_AND_RECOVERY_GUIDE.md) · [Final release checklist](handoff/07_FINAL_RELEASE_CHECKLIST.md).
 
 This release incorporates the user's updated `backend/core/test_release_acceptance.py` (development `DEBUG=True` override for the local-report test), while retaining all other Phase 5 Step 3 functionality. Local demo acceptance was reported as 20/20 by the user; public production **is not approved** without separate checks.
+
+
+## Final presentation materials
+
+- [PowerPoint deck](presentation/DocuPilot_AI_Final_Presentation.pptx)
+- [Presenter notes and live demo cues](presentation/PRESENTER_NOTES_AND_DEMO_CUES.md)
+- [Demo readiness checklist](presentation/DEMO_READINESS_CHECKLIST.md)
+
+The final presentation identifies the repository as Tech_Innovators-owned under the MIT License, uses SQLite3, and distinguishes controlled demonstration readiness from public production approval.
