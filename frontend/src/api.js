@@ -16,11 +16,13 @@ export function queryString(filters = {}) {
 
 export async function api(path, auth, options = {}) {
   const { method = 'GET', body, signal, download = false } = options;
-  const headers = { Authorization: basicHeader(auth.username, auth.password) };
+  const headers = {};
+  if (auth?.mode === "basic") headers.Authorization = basicHeader(auth.username, auth.password);
+  else if (!["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase())) headers["X-CSRFToken"] = csrfCookie();
   if (body !== undefined && !(body instanceof FormData)) headers['Content-Type'] = 'application/json';
   let response;
   try {
-    response = await fetch(`/api${path}`, { method, headers, body: body instanceof FormData ? body : body === undefined ? undefined : JSON.stringify(body), signal, cache: 'no-store' });
+    response = await fetch(`/api${path}`, { method, headers, body: body instanceof FormData ? body : body === undefined ? undefined : JSON.stringify(body), signal, credentials: "same-origin", cache: 'no-store' });
   } catch (error) {
     if (error.name === 'AbortError') throw error;
     throw new Error('Cannot connect to the backend. Start Django on port 8000.');
@@ -88,3 +90,31 @@ export async function privatePdf(documentId, auth, request = api) {
   if (!(blob instanceof Blob) || !blob.size) throw new Error('PDF preview is empty');
   return blob;
 }
+
+/** Django's readable CSRF cookie is not an authentication token. */
+export function csrfCookie(cookieString = typeof document === 'undefined' ? '' : document.cookie) {
+  const pair = cookieString.split(';').map(x => x.trim()).find(x => x.startsWith('csrftoken='));
+  return pair ? decodeURIComponent(pair.slice('csrftoken='.length)) : '';
+}
+
+async function sessionRequest(path, method = 'GET', payload) {
+  const headers = { ...(payload ? { 'Content-Type': 'application/json' } : {}) };
+  if (method !== 'GET') headers['X-CSRFToken'] = csrfCookie();
+  const response = await fetch(`/api/auth/${path}/`, { method, headers, credentials: 'same-origin', cache: 'no-store', body: payload ? JSON.stringify(payload) : undefined });
+  let data; try { data = await response.json(); } catch { data = {}; }
+  if (!response.ok) {
+    const error = new Error(data.detail || `Authentication request failed (${response.status})`);
+    error.status = response.status; throw error;
+  }
+  return data;
+}
+export async function prepareSession() { return sessionRequest('csrf'); }
+export async function signIn(username, password) {
+  await prepareSession();
+  return sessionRequest('login', 'POST', {username, password});
+}
+export async function currentSession() {
+  await prepareSession();
+  return sessionRequest('me');
+}
+export async function signOut() { return sessionRequest('logout', 'POST'); }

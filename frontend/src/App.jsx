@@ -1,3 +1,4 @@
+import { signIn, signOut, currentSession } from './api.js';
 import ReliabilityDashboard from './ReliabilityDashboard.jsx';
 import ClassificationReview from './ClassificationReview.jsx';
 import ClassificationPanel from './ClassificationPanel.jsx';
@@ -72,15 +73,16 @@ export default function App() {
   }, []);
 
   useEffect(() => { if (credentials) { loadDocs(credentials); loadInvoices(credentials); } }, [credentials, loadDocs, loadInvoices]);
+  useEffect(() => { let active = true; currentSession().then(session => { if (active && session.authenticated) setCredentials({username: session.username, mode: 'session'}); }).catch(() => {}); return () => {active=false;}; }, []);
 
   async function login(event) {
     event.preventDefault(); setLoginBusy(true); setLoginError('');
-    const proposed = { username: username.trim(), password };
-    try { await api('/documents/', proposed); setCredentials(proposed); setPassword(''); }
+    try { const session = await signIn(username.trim(), password); setCredentials({username: session.username, mode: 'session'}); setPassword(''); }
     catch (error) { setLoginError(authError(error)); }
     finally { setLoginBusy(false); }
   }
-  function logout() {
+  async function logout() {
+    try { await signOut(); } catch (error) { setLoginError(authError(error)); }
     setCredentials(null); setTab('documents'); setPassword(''); setUsername(''); setDocuments([]); setInvoices([]); setSummary(null); setLineItemView(null); setAnswer(null); setPages(null); setPdfEvidence(null); setMessage(''); setSelectedDocs([]); setProcessingJob(null);
   }
   async function upload(event) {
@@ -165,7 +167,7 @@ export default function App() {
     finally { setAsking(false); }
   }
 
-  if (!credentials) return <main className="login-page"><section className="login-panel"><div className="brand"><span className="brand-icon">D</span><span>DocuPilot <b>AI</b></span></div><span className="eyebrow">INTELLIGENT DOCUMENT WORKSPACE</span><h1>Turn documents into decisions.</h1><p className="muted">Sign in with an existing Django account to manage private documents, extract invoices and ask evidence-grounded questions.</p><form onSubmit={login} className="form-stack"><label>Username<input required autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} /></label><label>Password<input required type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} /></label><button className="primary" disabled={loginBusy}>{loginBusy ? 'Signing in…' : 'Sign in'}</button></form><Message text={loginError} kind="error" onClose={() => setLoginError('')} /><div className="security-note">Credentials are kept in memory only, never stored in browser storage. This development login uses HTTP Basic authentication; use HTTPS for any remote deployment.</div></section></main>;
+  if (!credentials) return <main className="login-page"><section className="login-panel"><div className="brand"><span className="brand-icon">D</span><span>DocuPilot <b>AI</b></span></div><span className="eyebrow">INTELLIGENT DOCUMENT WORKSPACE</span><h1>Turn documents into decisions.</h1><p className="muted">Sign in with an existing Django account to manage private documents, extract invoices and ask evidence-grounded questions.</p><form onSubmit={login} className="form-stack"><label>Username<input required autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} /></label><label>Password<input required type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} /></label><button className="primary" disabled={loginBusy}>{loginBusy ? 'Signing in…' : 'Sign in'}</button></form><Message text={loginError} kind="error" onClose={() => setLoginError('')} /><div className="security-note">Credentials are kept in memory only, never stored in browser storage. Authentication uses a CSRF-protected HttpOnly session cookie. Use HTTPS for remote deployment.</div></section></main>;
 
   return <div className="app-shell"><aside className="sidebar"><div className="brand"><span className="brand-icon">D</span><span>DocuPilot <b>AI</b></span></div><p className="sidebar-label">WORKSPACE</p><nav aria-label="Primary navigation">{nav.map(([key,label]) => <button key={key} onClick={() => setTab(key)} className={`nav-item ${tab === key ? 'active' : ''}`}>{label}</button>)}</nav><div className="sidebar-bottom"><span>Signed in as <strong>{credentials.username}</strong></span><button className="ghost" onClick={logout}>Sign out</button></div></aside><main className="main-panel"><header className="topbar"><div><span className="eyebrow">TECH_INNOVATORS / DOCUPILOT AI</span><h1>{nav.find(([key]) => key === tab)?.[1]}</h1></div><span className="environment-tag">SQLite3 · MVP</span></header><div className="main-content">
   {tab === 'documents' && <><div className="intro"><h2>Document library</h2><p>Upload PDF, UTF-8 TXT, PNG or JPEG files (10 MiB maximum). Scanned pages use local OCR. Private documents are accessible only to their owner.</p></div><div className="panel"><h3>Upload document</h3><form onSubmit={upload} className="upload-form"><label>Document title (optional)<input maxLength={255} value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Supplier invoice October" /></label><label>Choose PDF, TXT or image<input type="file" accept=".pdf,.txt,.png,.jpg,.jpeg,application/pdf,text/plain,image/png,image/jpeg" required onChange={e => setFile(e.target.files?.[0] || null)} /></label><button className="primary" disabled={uploadBusy || !file}>{uploadBusy ? 'Uploading…' : 'Upload document'}</button></form></div>{processingJob && <AsyncJobPanel job={processingJob} auth={credentials} onClose={() => setProcessingJob(null)} onUpdate={setProcessingJob} onComplete={() => { loadDocs(credentials); setPages(null); setAnswer(null); }} />}

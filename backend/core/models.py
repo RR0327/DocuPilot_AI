@@ -195,3 +195,14 @@ class ClassificationFeedback(models.Model):
     class Meta:
         ordering = ["-created_at", "-id"]
         indexes = [models.Index(fields=["document", "created_at"], name="class_feedback_doc_time")]
+
+
+class AuthenticationFailure(models.Model):
+    """Database-backed login failure bucket; no Redis dependency or plaintext identifiers."""
+    key_digest = models.CharField(max_length=64, unique=True, db_index=True)
+    attempts = models.PositiveIntegerField(default=0)
+    window_started = models.DateTimeField()
+    last_attempt = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Authentication failure bucket"

@@ -16,6 +16,12 @@ class Command(BaseCommand):
         if getattr(settings, "MEDIA_URL", None):
             failures.append("Private documents must not have a public MEDIA_URL")
         if not settings.DEBUG:
+            if "rest_framework.authentication.BasicAuthentication" in settings.REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"]:
+                failures.append("Production Basic authentication is forbidden; session-only required")
+            if settings.DOCUPILOT_LOGIN_FAILURE_LIMIT > 10:
+                failures.append("Login failure limit is too permissive")
+            if settings.DOCUPILOT_SESSION_IDLE_SECONDS > settings.SESSION_COOKIE_AGE:
+                failures.append("Idle timeout must not exceed session lifetime")
             if not settings.SECURE_SSL_REDIRECT:
                 failures.append("Enable HTTPS redirect behind a correctly configured TLS endpoint")
             if not settings.SESSION_COOKIE_SECURE or not settings.CSRF_COOKIE_SECURE:

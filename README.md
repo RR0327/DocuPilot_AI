@@ -240,3 +240,8 @@ See [Phase 4 Step 6 testing guide](PHASE4_STEP6_TESTING.md). An independent two-
 - Execute `python -m unittest discover -s scripts -p "test_*.py"`, Django tests, frontend tests, Playwright and the React build as documented in [PHASE5_STEP1_TESTING.md](PHASE5_STEP1_TESTING.md).
 - Preserve [LICENSE](LICENSE), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). This update does not add PostgreSQL or change database migrations.
 - **Do not call this a public-production-ready deployment:** HTTP Basic authentication and rate limiting need a dedicated security remediation step. Independent classification evaluation is still contingent on genuine adjudicated labels.
+
+
+## Phase 5 Step 2 — Session authentication and rate limiting
+
+The browser now signs in using a CSRF-protected Django session and sends HttpOnly cookies instead of Basic credentials on every request. Rate-limited login attempts are recorded by HMAC digest in SQLite3 (`0012_authenticationfailure`). Old Basic API clients are disabled unless **both** `DJANGO_DEBUG=true` and `DOCUPILOT_ALLOW_DEV_BASIC=true`. Security acceptance and Windows commands: [PHASE5_STEP2_TESTING.md](PHASE5_STEP2_TESTING.md). Do not deploy the development server on a public interface.

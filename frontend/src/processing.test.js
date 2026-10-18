@@ -15,10 +15,11 @@ test('background request is authenticated and returns job UUID', async () => {
     globalThis.fetch = async (url, opts) => {
       assert.equal(url, '/api/documents/9/extract-async/');
       assert.equal(opts.method, 'POST');
-      assert.match(opts.headers.Authorization, /^Basic /);
+      assert.equal(opts.headers.Authorization, undefined);
+      assert.equal(opts.credentials, 'same-origin');
       return { ok: true, status: 202, json: async () => ({ id: '9a', state: 'queued' }) };
     };
-    assert.equal((await api('/documents/9/extract-async/', { username: 'u', password: 'p' }, { method: 'POST' })).state, 'queued');
+    assert.equal((await api('/documents/9/extract-async/', { username: 'u', mode: 'session' }, { method: 'POST' })).state, 'queued');
   } finally { globalThis.fetch = original; }
 });
 test('retry and polling URLs are owner-authenticated', async () => {
@@ -26,10 +27,11 @@ test('retry and polling URLs are owner-authenticated', async () => {
   try {
     const urls = [];
     globalThis.fetch = async (url, opts) => {
-      urls.push(url); assert.match(opts.headers.Authorization, /^Basic /);
+      urls.push(url); assert.equal(opts.headers.Authorization, undefined);
+      assert.equal(opts.credentials, 'same-origin');
       return { ok: true, status: 200, json: async () => ({ state: 'running' }) };
     };
-    const user = { username: 'u', password: 'p' };
+    const user = { username: 'u', mode: 'session' };
     await api('/processing-jobs/abcdef/', user);
     await api('/processing-jobs/abcdef/retry/', user, { method: 'POST' });
     assert.deepEqual(urls, ['/api/processing-jobs/abcdef/', '/api/processing-jobs/abcdef/retry/']);

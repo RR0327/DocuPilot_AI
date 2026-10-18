@@ -10,7 +10,7 @@ ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost
 if not DEBUG and (SECRET_KEY in {"development-only-not-for-production", "replace-with-a-long-random-value"} or len(SECRET_KEY) < 50):
     raise RuntimeError("Production DJANGO_SECRET_KEY must be a unique random value of at least 50 characters")
 INSTALLED_APPS = ["django.contrib.admin", "django.contrib.auth", "django.contrib.contenttypes", "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles", "rest_framework", "core"]
-MIDDLEWARE = ["django.middleware.security.SecurityMiddleware", "django.contrib.sessions.middleware.SessionMiddleware", "django.middleware.common.CommonMiddleware", "django.middleware.csrf.CsrfViewMiddleware", "django.contrib.auth.middleware.AuthenticationMiddleware", "django.contrib.messages.middleware.MessageMiddleware", "django.middleware.clickjacking.XFrameOptionsMiddleware"]
+MIDDLEWARE = ["django.middleware.security.SecurityMiddleware", "django.contrib.sessions.middleware.SessionMiddleware", "django.middleware.common.CommonMiddleware", "django.middleware.csrf.CsrfViewMiddleware", "django.contrib.auth.middleware.AuthenticationMiddleware", "core.session_middleware.SessionIdleMiddleware", "django.contrib.messages.middleware.MessageMiddleware", "django.middleware.clickjacking.XFrameOptionsMiddleware"]
 ROOT_URLCONF = "config.urls"
 TEMPLATES = [{"BACKEND": "django.template.backends.django.DjangoTemplates", "DIRS": [], "APP_DIRS": True, "OPTIONS": {"context_processors": ["django.template.context_processors.debug", "django.template.context_processors.request", "django.contrib.auth.context_processors.auth", "django.contrib.messages.context_processors.messages"]}}]
 WSGI_APPLICATION = "config.wsgi.application"
@@ -25,12 +25,17 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.SessionAuthentication", "rest_framework.authentication.BasicAuthentication"],
+    "DEFAULT_AUTHENTICATION_CLASSES": (["rest_framework.authentication.SessionAuthentication", "rest_framework.authentication.BasicAuthentication"] if DEBUG and os.getenv("DOCUPILOT_ALLOW_DEV_BASIC", "false").lower() == "true" else ["rest_framework.authentication.SessionAuthentication"]),
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
 }
-AUTH_PASSWORD_VALIDATORS = []
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 12}},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_TZ = True
@@ -83,3 +88,10 @@ CSRF_TRUSTED_ORIGINS = [x.strip() for x in os.getenv("DJANGO_CSRF_TRUSTED_ORIGIN
 SESSION_COOKIE_AGE = int(os.getenv("DJANGO_SESSION_AGE", "3600"))
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # Do not expose private files as static media or add permissive CORS middleware.
+
+# Session-only authentication is required outside a deliberate development override.
+DOCUPILOT_LOGIN_FAILURE_LIMIT = max(2, int(os.getenv("DOCUPILOT_LOGIN_FAILURE_LIMIT", "5")))
+DOCUPILOT_LOGIN_WINDOW_SECONDS = max(60, int(os.getenv("DOCUPILOT_LOGIN_WINDOW_SECONDS", "900")))
+DOCUPILOT_SESSION_IDLE_SECONDS = min(SESSION_COOKIE_AGE, max(60, int(os.getenv("DOCUPILOT_SESSION_IDLE_SECONDS", "1800"))))
+# Never trust arbitrary client-provided proxy IP headers for rate-limit identity.
+# REMOTE_ADDR must be set by a trusted proxy; do not expose Django directly behind spoofable headers.
