@@ -1,12 +1,34 @@
 import { test, expect } from '@playwright/test';
 
 /** Deterministic browser contract suite. Routes are mocked; live backend smoke is separate. */
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, context }) => {
+  let authenticated = false;
+  await context.addCookies([
+    { name: 'csrftoken', value: 'mock-csrf-token', domain: '127.0.0.1', path: '/' },
+    { name: 'csrftoken', value: 'mock-csrf-token', domain: 'localhost', path: '/' }
+  ]);
   const docs = [{id:7,title:'Refund Policy',file_type:'txt',original_filename:'policy.txt',processing_status:'completed',has_file:true}];
   await page.route('**/api/**', async route => {
     const req=route.request(), url=new URL(req.url()), path=url.pathname;
     const json=(data,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
-    if (req.headers()['authorization'] !== 'Basic '+Buffer.from('demo:secret').toString('base64')) return json({detail:'Unauthorized'},401);
+    if (path === '/api/auth/csrf/') return json({csrf_ready: true});
+    if (path === '/api/auth/login/' && req.method() === 'POST') {
+      const payload = req.postDataJSON() || {};
+      if (payload.username === 'demo' && payload.password === 'secret') {
+        authenticated = true;
+        return json({username: 'demo', authenticated: true});
+      }
+      return json({detail: 'Authentication failed'}, 401);
+    }
+    if (path === '/api/auth/logout/' && req.method() === 'POST') {
+      authenticated = false;
+      return json({authenticated: false});
+    }
+    if (path === '/api/auth/me/') {
+      if (authenticated) return json({username: 'demo', authenticated: true});
+      return json({authenticated: false}, 401);
+    }
+    if (!authenticated) return json({detail:'Unauthorized'},401);
     if (path==='/api/documents/' && req.method()==='GET') return json({count:docs.length,next:null,results:docs});
     if (path==='/api/documents/upload/' && req.method()==='POST') {docs.push({id:8,title:'Sample',file_type:'txt',original_filename:'sample.txt',processing_status:'pending',has_file:true});return json(docs.at(-1),201);}
     if (path==='/api/documents/7/extract/' && req.method()==='POST') return json({document_id:7,page_count:1,character_count:54,processing_status:'completed'});

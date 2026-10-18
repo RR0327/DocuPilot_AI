@@ -47,6 +47,7 @@ DOCUPILOT_OCR_LANG = os.getenv("DOCUPILOT_OCR_LANG", "eng")
 
 # Documents are intentionally private: do not expose MEDIA_URL or serve this root.
 MEDIA_ROOT = BASE_DIR / "private_media"
+MEDIA_URL = None
 DATA_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024
 
