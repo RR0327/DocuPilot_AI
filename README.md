@@ -192,3 +192,15 @@ Optional background extraction now includes atomic job claiming, bounded queued-
 After successful synchronous or Celery extraction, DocuPilot AI classifies extracted text as **invoice**, **policy**, **report**, **contract**, or **unknown**. Document owners can view source-page keyword evidence or trigger a reclassification on their own stored pages. Results are persisted in the SQLite3 `DocumentClassification` table (migration `0010_documentclassification`) and exposed using `GET/POST /api/documents/{id}/classification/` and the `classification_category` property in document lists. Category weights indicate matched rules, **not a probabilistic confidence estimate**. Ambiguous or low-evidence documents remain `unknown` for manual inspection. No paid APIs, private-file exposure, or replacement of the original document evidence are introduced.
 
 See [Phase 4 Step 1 test and Windows 11 verification](PHASE4_STEP1_TESTING.md). Project policies: [LICENSE](LICENSE), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md).
+
+## Phase 4 Step 2 — Classification quality and explainability checks
+
+Phase 4 Step 2 provides a **synthetic classification quality benchmark** (15 labeled examples, including the `unknown` class) with multiclass precision, recall, F1, macro averages, confusion matrix, and evidence-grounding diagnostics. The benchmark is deterministic and does **not** establish accuracy on real uploaded documents.
+
+- Authenticated `GET /api/classification/evaluation/` returns the bundled synthetic benchmark report; it does not read private user documents.
+- Open **Classification quality** in the React navigation to inspect class metrics, unknown handling and actual-versus-predicted confusion matrix.
+- Run `cd backend; python manage.py evaluate_classification --output classification_report.json` for an offline JSON report.
+- Evidence for the selected category is prioritized inside the existing 12-excerpt display cap; stored page text remains authoritative.
+- No SQLite3 migrations are required. All existing processing and document-owner restrictions remain in force.
+
+See [PHASE4_STEP2_TESTING.md](PHASE4_STEP2_TESTING.md) for Windows 11 setup, tests, release acceptance and limitations.

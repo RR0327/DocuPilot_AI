@@ -135,6 +135,16 @@ class DocumentViewSet(viewsets.ModelViewSet):
         })
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def classification_evaluation(request):
+    """Published synthetic regression fixture; never reads users' private documents."""
+    from .classification_evaluation import run_fixture
+    response = Response(run_fixture())
+    response["Cache-Control"] = "no-store"
+    return response
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])

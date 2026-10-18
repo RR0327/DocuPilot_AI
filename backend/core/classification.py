@@ -28,7 +28,7 @@ def classify_pages(pages):
                 match = re.search(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)", normalized)
                 if match:
                     scores[category] += weight
-                    if len(evidence) < MAX_EVIDENCE:
+                    if match is not None:
                         start = max(0, match.start() - 65)
                         end = min(len(normalized), match.end() + 85)
                         evidence.append({"category": category, "phrase": phrase,
@@ -37,6 +37,9 @@ def classify_pages(pages):
     ranked = sorted(scores, key=lambda k: (-scores[k], k))
     leader = ranked[0]
     runner_up = scores[ranked[1]]
+    # Put winning category evidence first so the capped explanation cannot hide it.
+    evidence.sort(key=lambda e: (e["category"] != leader, e["page_number"], -e["weight"], e["phrase"]))
+    evidence = evidence[:MAX_EVIDENCE]
     if scores[leader] < 3:
         return "unknown", evidence, scores, "Insufficient matching document evidence"
     if scores[leader] == runner_up:

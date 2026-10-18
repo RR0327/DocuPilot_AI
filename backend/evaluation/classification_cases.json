@@ -1,0 +1,152 @@
+[
+  {
+    "id": "invoice_1",
+    "label": "invoice",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "Invoice No: 110 Invoice Date: 2026-08-02 Subtotal: 250"
+      }
+    ]
+  },
+  {
+    "id": "invoice_2",
+    "label": "invoice",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "Bill To: Shop. Unit Price: 12. Amount Due: 24"
+      }
+    ]
+  },
+  {
+    "id": "invoice_3",
+    "label": "invoice",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "Invoice number ABC-12. Invoice Date 2026-06-01"
+      }
+    ]
+  },
+  {
+    "id": "policy_1",
+    "label": "policy",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "Privacy Policy. Policy Scope: visitors. Effective Date: 2026-02-01"
+      }
+    ]
+  },
+  {
+    "id": "policy_2",
+    "label": "policy",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "Refund Policy. Policy applies to all purchases."
+      }
+    ]
+  },
+  {
+    "id": "policy_3",
+    "label": "policy",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "Policy Statement. Compliance requirements and refunds."
+      }
+    ]
+  },
+  {
+    "id": "report_1",
+    "label": "report",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "Executive Summary: Methodology, Findings and Conclusions"
+      }
+    ]
+  },
+  {
+    "id": "report_2",
+    "label": "report",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "Annual Report. Executive Summary of this year."
+      }
+    ]
+  },
+  {
+    "id": "report_3",
+    "label": "report",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "Research Report: Results and Discussion"
+      }
+    ]
+  },
+  {
+    "id": "contract_1",
+    "label": "contract",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "This Agreement is binding. Governing Law. Termination Clause."
+      }
+    ]
+  },
+  {
+    "id": "contract_2",
+    "label": "contract",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "The parties agree. Signed By: two witnesses."
+      }
+    ]
+  },
+  {
+    "id": "contract_3",
+    "label": "contract",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "This Agreement: hereinafter. Governing Law applies."
+      }
+    ]
+  },
+  {
+    "id": "unknown_1",
+    "label": "unknown",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "Hello, this is a personal note."
+      }
+    ]
+  },
+  {
+    "id": "unknown_2",
+    "label": "unknown",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "Invoice No: 11 Privacy Policy"
+      }
+    ]
+  },
+  {
+    "id": "unknown_3",
+    "label": "unknown",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "A plain document with general discussion."
+      }
+    ]
+  }
+]
