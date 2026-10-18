@@ -82,6 +82,22 @@ class DocumentViewSet(viewsets.ModelViewSet):
         response["Cache-Control"] = "no-store"
         return response
 
+    @action(detail=True, methods=["get", "post"], url_path="classification-review")
+    def classification_review(self, request, pk=None):
+        from .classification_feedback import feedback_payload, submit_feedback
+        from rest_framework.exceptions import ValidationError
+        document = self.get_object()
+        if request.method == "POST":
+            try:
+                payload = submit_feedback(document, request.user, request.data)
+            except ValidationError as exc:
+                return Response(exc.detail, status=409 if "Wait for" in str(exc.detail) else 400)
+            response = Response(payload, status=201)
+        else:
+            response = Response(feedback_payload(document))
+        response["Cache-Control"] = "no-store"
+        return response
+
     @action(detail=True, methods=["get"])
     def pages(self, request, pk=None):
         return Response(DocumentPageSerializer(self.get_object().pages.all(), many=True).data)
@@ -133,6 +149,15 @@ class DocumentViewSet(viewsets.ModelViewSet):
             "page_count": result.page_count,
             "character_count": result.character_count,
         })
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def classification_feedback_evaluation(request):
+    from .classification_feedback import feedback_summary
+    response = Response(feedback_summary(Document.objects.filter(owner=request.user)))
+    response["Cache-Control"] = "no-store"
+    return response
 
 
 @api_view(["GET"])

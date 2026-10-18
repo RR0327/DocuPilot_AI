@@ -175,3 +175,23 @@ class DocumentClassification(models.Model):
     scores = models.JSONField(default=dict)
     reason = models.CharField(max_length=180, blank=True)
     classified_at = models.DateTimeField(auto_now=True)
+
+
+class ClassificationFeedback(models.Model):
+    """Append-only human classification decision; never edits machine evidence."""
+    class Action(models.TextChoices):
+        VERIFY = "verify", "Verify prediction"
+        OVERRIDE = "override", "Override prediction"
+        CLEAR = "clear", "Clear human decision"
+
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="classification_feedback")
+    reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="classification_feedback")
+    action = models.CharField(max_length=10, choices=Action.choices)
+    category = models.CharField(max_length=12, choices=DocumentClassification.Category.choices, blank=True)
+    machine_category = models.CharField(max_length=12, choices=DocumentClassification.Category.choices)
+    note = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        indexes = [models.Index(fields=["document", "created_at"], name="class_feedback_doc_time")]

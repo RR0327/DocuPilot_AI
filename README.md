@@ -211,3 +211,8 @@ See [PHASE4_STEP2_TESTING.md](PHASE4_STEP2_TESTING.md) for Windows 11 setup, tes
 - Reports false abstentions, unsafe guesses, and wrong-category errors in synthetic quality reporting.
 - Adds optional *externally human-labeled* evaluation CLI (`python manage.py evaluate_classification --dataset evaluation/independent_labels.json`) with provenance metadata. The independently labeled dataset is **not supplied**; refer to `backend/evaluation/independent_labels_TEMPLATE.json`. No real-world accuracy is claimed.
 - Full verification instructions: [PHASE4_STEP3_TESTING.md](PHASE4_STEP3_TESTING.md).
+
+
+## Phase 4 Step 4 — human-verified document classification
+
+Classification decisions are now tracked through an append-only `ClassificationFeedback` history. Machine predictions and their original page-linked evidence remain untouched; a human can verify, override (with a reason), or clear the current human decision. The owner-only `GET/POST /api/documents/{id}/classification-review/` endpoint returns both machine and effective reviewed categories. `GET /api/classification/feedback-evaluation/` summarizes **review activity**, not independent classification accuracy. See [PHASE4_STEP4_TESTING.md](PHASE4_STEP4_TESTING.md) for installation, migration, security and regression procedures.
