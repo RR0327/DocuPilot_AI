@@ -117,3 +117,18 @@ class InvoiceLineItem(models.Model):
     class Meta:
         ordering = ["record_id", "line_number"]
         constraints = [models.UniqueConstraint(fields=["record", "line_number"], name="unique_invoice_line_number")]
+
+
+class ExtractionReview(models.Model):
+    """Append-only evidence-preserving human decision for an extracted invoice."""
+    record = models.ForeignKey(ExtractedRecord, on_delete=models.CASCADE, related_name="reviews")
+    reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="extraction_reviews")
+    action = models.CharField(max_length=12, choices=[("approve", "Approve"), ("reject", "Reject"), ("reopen", "Reopen")])
+    previous_status = models.CharField(max_length=20)
+    new_status = models.CharField(max_length=20)
+    corrections = models.JSONField(default=dict)
+    note = models.TextField(blank=True)
+    reviewed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-reviewed_at", "-id"]

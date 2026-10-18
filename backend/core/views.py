@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from .extraction import ExtractionError, extract_document
 from .invoice_extraction import InvoiceError, extract_invoice
 from .models import Document, ExtractedRecord, QuestionAnswer, InvoicePaymentState
+from .review import apply_review, review_details, quality_flags
 from .search import MAX_QUERY_LENGTH, retrieve, answer_from_evidence
 from .semantic import SemanticUnavailable
 from .serializers import DocumentSerializer, DocumentPageSerializer, ExtractedRecordSerializer, UploadDocumentSerializer, InvoiceLineItemSerializer
@@ -201,3 +202,35 @@ def invoice_line_items(request, record_id):
     record = get_object_or_404(ExtractedRecord, pk=record_id, record_type="invoice", document__owner=request.user)
     items = record.line_items.all().order_by("line_number")
     return Response({"record_id": record.id, "count": items.count(), "results": InvoiceLineItemSerializer(items, many=True).data})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def review_queue(request):
+    status_filter = request.query_params.get("status", "unreviewed")
+    if status_filter not in ("unreviewed", "valid", "invalid", "all"):
+        return Response({"status": ["Choose unreviewed, valid, invalid or all."]}, status=400)
+    records = ExtractedRecord.objects.filter(record_type="invoice", document__owner=request.user).select_related("document").order_by("-created_at", "-pk")
+    if status_filter != "all":
+        records = records.filter(validation_status=status_filter)
+    rows = []
+    for record in records[:200]:
+        detail = review_details(record)
+        detail.pop("history")
+        detail["needs_attention"] = bool(detail["quality_flags"])
+        rows.append(detail)
+    rows.sort(key=lambda r: (not r["needs_attention"], -r["record_id"]))
+    return Response({"count": len(rows), "results": rows})
+
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def review_record(request, record_id):
+    record = get_object_or_404(ExtractedRecord, pk=record_id, record_type="invoice", document__owner=request.user)
+    if request.method == "POST":
+        from rest_framework.exceptions import ValidationError
+        try:
+            record = apply_review(record.pk, request.user, request.data)
+        except ExtractedRecord.DoesNotExist:
+            raise Http404
+    return Response(review_details(record))

@@ -8,6 +8,7 @@ from django.db.models import Prefetch
 from django.utils import timezone
 
 from .models import ExtractedRecord, InvoicePaymentState
+from .review import current_fields
 
 VALID_STATUSES = set(InvoicePaymentState.State.values)
 COLUMNS = ("record_id", "document_id", "document_title", "invoice_number", "supplier", "invoice_date", "due_date", "subtotal", "tax", "total", "currency", "payment_status", "due_category", "validation_status")
@@ -44,7 +45,7 @@ def payment_status(record):
 def serialize_invoice(record, today=None):
     today = today or timezone.localdate()
     data = record.extracted_data if isinstance(record.extracted_data, dict) else {}
-    fields = data.get("fields") if isinstance(data.get("fields"), dict) else {}
+    fields = current_fields(record)  # reviewed corrections only; original source remains immutable
     due = _iso_date(fields.get("due_date"))
     status = payment_status(record)
     due_category = "undated"

@@ -10,5 +10,7 @@ admin.site.register(DocumentChunk)
 from .models import InvoicePaymentState
 admin.site.register(InvoicePaymentState)
 
-from .models import InvoiceLineItem
+from .models import InvoiceLineItem, ExtractionReview
 admin.site.register(InvoiceLineItem)
+
+admin.site.register(ExtractionReview)

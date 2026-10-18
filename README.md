@@ -159,3 +159,13 @@ frontend dependencies. See [Phase 2 Step 4 testing](PHASE2_STEP4_TESTING.md).
 Adds reproducible local quality metrics using the existing keyword, semantic and hybrid retrieval code paths. The benchmark command (`python manage.py evaluate_docupilot --mode keyword`) creates isolated synthetic documents, measures Recall@5, MRR, no-answer abstention and exact citation provenance, measures invoice exact-field extraction, and rolls back its temporary database records. It also reports *illustrative* OCR character-error rates from supplied reference/prediction text; these are **not live OCR accuracy claims**. Additional review warnings flag due dates preceding invoice dates and recognized line totals inconsistent with a stated subtotal. No source values are modified automatically. The benchmark corpus is a smoke test, not evidence of real-world reliability.
 
 See [Phase 2 Step 5 testing and release gate](PHASE2_STEP5_TESTING.md) for Windows 11 commands and real-data evaluation requirements. SQLite3 and all prior functionality, private storage, and governance documents are preserved. **Phase 2 is only ready for a local demonstration after user-executed acceptance tests; public deployment requires separate security and operations work.**
+
+## Phase 3 Step 1 — Human Review Queue
+
+A new **Human review** React workspace lists the signed-in owner's extracted invoices, prioritizing missing fields, warnings and arithmetic mismatches. Reviewers can approve with validated field corrections, reject with a mandatory reason, or reopen reviewed records. Every decision is retained in an `ExtractionReview` SQLite table, separate from immutable extracted evidence. Approved corrections flow through the existing invoice report, dashboard and CSV; reopening restores unreviewed source values. Review actions are authenticated and scoped to the document owner, not global staff roles.
+
+- `GET /api/reviews/?status=unreviewed|valid|invalid|all` — owner-scoped queue.
+- `GET /api/reviews/{record_id}/` — original/effective fields, evidence, flags and history.
+- `POST /api/reviews/{record_id}/` — `{ "action": "approve", "corrections": {"total": "250.00"}, "note": "Checked source" }`, or `reject` with a reason, or `reopen`.
+
+See [Phase 3 Step 1 testing instructions](PHASE3_STEP1_TESTING.md). SQLite3 remains the sole database. The repository's [MIT License](LICENSE), [Contributing](CONTRIBUTING.md) and [Security](SECURITY.md) files remain unchanged.
