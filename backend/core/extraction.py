@@ -116,6 +116,8 @@ def extract_document(document):
                 for number, text in pages
             ])
             rebuild_document_chunks(document)
+            from .classification import classify_document
+            classify_document(document)
             document.processing_status = Document.Status.COMPLETED
             document.save(update_fields=["processing_status"])
         return ExtractionSummary(document.id, document.processing_status, len(pages), sum(len(t) for _, t in pages))

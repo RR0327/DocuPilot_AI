@@ -39,10 +39,19 @@ def validated_document_file(value):
 class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
-        fields = ["id", "title", "file_type", "original_filename", "processing_status", "uploaded_at", "has_file"]
-        read_only_fields = ["id", "processing_status", "uploaded_at", "has_file", "original_filename"]
+        fields = ["id", "title", "file_type", "original_filename", "processing_status", "uploaded_at", "has_file", "classification_category"]
+        read_only_fields = ["id", "processing_status", "uploaded_at", "has_file", "original_filename", "classification_category"]
 
     has_file = serializers.SerializerMethodField()
+    classification_category = serializers.SerializerMethodField()
+
+    def get_classification_category(self, obj):
+        from .models import DocumentClassification
+        try:
+            return obj.classification.category
+        except DocumentClassification.DoesNotExist:
+            return None
+
 
     def get_has_file(self, obj):
         return bool(obj.file)

@@ -14,3 +14,6 @@ from .models import InvoiceLineItem, ExtractionReview
 admin.site.register(InvoiceLineItem)
 
 admin.site.register(ExtractionReview)
+
+from .models import DocumentClassification
+admin.site.register(DocumentClassification)

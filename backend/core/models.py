@@ -158,3 +158,20 @@ class ProcessingJob(models.Model):
     class Meta:
         ordering = ["-created_at"]
         indexes = [models.Index(fields=["document", "state"], name="processing_doc_state_idx")]
+
+
+class DocumentClassification(models.Model):
+    """Latest explainable classification; original page evidence remains authoritative."""
+    class Category(models.TextChoices):
+        INVOICE = "invoice", "Invoice"
+        POLICY = "policy", "Policy"
+        REPORT = "report", "Report"
+        CONTRACT = "contract", "Contract"
+        UNKNOWN = "unknown", "Unknown"
+
+    document = models.OneToOneField(Document, on_delete=models.CASCADE, related_name="classification")
+    category = models.CharField(max_length=12, choices=Category.choices, default=Category.UNKNOWN)
+    evidence = models.JSONField(default=list)
+    scores = models.JSONField(default=dict)
+    reason = models.CharField(max_length=180, blank=True)
+    classified_at = models.DateTimeField(auto_now=True)

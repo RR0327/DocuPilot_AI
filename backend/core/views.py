@@ -61,6 +61,27 @@ class DocumentViewSet(viewsets.ModelViewSet):
         response["Content-Disposition"] = 'inline; filename="document.pdf"'
         return response
 
+    @action(detail=True, methods=["get", "post"], url_path="classification")
+    def classification(self, request, pk=None):
+        """Owner-only evidence-backed category; POST recalculates from stored pages."""
+        from .classification import classify_document, classification_payload
+        from .models import DocumentClassification
+        document = self.get_object()
+        if request.method == "POST":
+            if ProcessingJob.objects.filter(document=document, state__in=["queued", "running"]).exists():
+                return Response({"detail": "Extraction is currently active."}, status=409)
+            if not document.pages.exists():
+                return Response({"detail": "Extract document pages before classification."}, status=409)
+            result = classify_document(document)
+            return Response(classification_payload(result), status=200)
+        try:
+            result = document.classification
+        except DocumentClassification.DoesNotExist:
+            return Response({"detail": "No classification yet. Extract or classify the document."}, status=404)
+        response = Response(classification_payload(result))
+        response["Cache-Control"] = "no-store"
+        return response
+
     @action(detail=True, methods=["get"])
     def pages(self, request, pk=None):
         return Response(DocumentPageSerializer(self.get_object().pages.all(), many=True).data)

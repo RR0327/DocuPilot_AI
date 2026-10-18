@@ -186,3 +186,9 @@ The Document workspace offers **Background extract**, job status updates and a r
 ## Phase 3 Step 4 — Job recovery and observability
 
 Optional background extraction now includes atomic job claiming, bounded queued-job recovery, operator-only stale running-job remediation, and an authenticated `GET /api/processing-jobs/overview/` summary. The management command defaults to **dry-run**, and `--apply` must only be used after checking the Redis worker. No automatic requeue of running jobs is performed. See [Phase 3 Step 4 testing](PHASE3_STEP4_TESTING.md). SQLite3 remains the database; all existing review, analytics, OCR, retrieval and private PDF features are preserved.
+
+## Phase 4 Step 1 — Explainable Document Classification
+
+After successful synchronous or Celery extraction, DocuPilot AI classifies extracted text as **invoice**, **policy**, **report**, **contract**, or **unknown**. Document owners can view source-page keyword evidence or trigger a reclassification on their own stored pages. Results are persisted in the SQLite3 `DocumentClassification` table (migration `0010_documentclassification`) and exposed using `GET/POST /api/documents/{id}/classification/` and the `classification_category` property in document lists. Category weights indicate matched rules, **not a probabilistic confidence estimate**. Ambiguous or low-evidence documents remain `unknown` for manual inspection. No paid APIs, private-file exposure, or replacement of the original document evidence are introduced.
+
+See [Phase 4 Step 1 test and Windows 11 verification](PHASE4_STEP1_TESTING.md). Project policies: [LICENSE](LICENSE), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md).
