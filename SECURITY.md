@@ -14,6 +14,6 @@ DocuPilot AI is a hackathon prototype; only the current `main` branch receives f
 - Never commit real private documents or personally identifying information.
 - Validate document size, type, schema, and content before processing.
 - Treat uploaded text as untrusted; it must not override application instructions.
-- Simulations and demonstrations must never write real financial transactions.
+- The application only processes and reviews document data; it does not execute payments, modify external financial systems, or perform transactions.
 
-**Warning:** This is a synthetic-data demonstration, not a production document-processing application. It uses controlled Django session authentication and has no real banking integration.
+**Warning:** This is a synthetic-data demonstration, not a production document-processing application. It uses controlled Django session authentication and does not execute payments or connect to external financial systems.
