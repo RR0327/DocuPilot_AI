@@ -123,3 +123,14 @@ Document evidence search now supports three optional request modes: `keyword` (d
 To enable semantic search on Windows, install `backend/requirements-semantic.txt` in the backend virtual environment. First inference may download `intfloat/multilingual-e5-small`, which must be available locally for offline mode. The backend returns an explicit 503 when the semantic model is missing; default keyword requests keep working. The use of a local model does not imply perfect Bangla performance.
 
 `POST /api/ask/` accepts an optional `mode` of `keyword`, `semantic`, or `hybrid`; default remains `keyword`. A source reference now includes `retrieval_method`, and the response includes `retrieval_mode`. See [Phase 2 Step 2 Windows testing](PHASE2_STEP2_TESTING.md) for complete instructions and acceptance criteria.
+
+
+## Phase 2 Step 3 — Private highlighted PDF evidence viewer
+
+For an evidence citation from a PDF, choose **View highlighted PDF**. The backend serves PDFs only through the authenticated, owner-scoped `GET /api/documents/{id}/private-pdf/` endpoint. The file is never served via a public media route or persisted in localStorage. The browser creates and revokes a temporary object URL.
+
+The React viewer uses `react-pdf` (PDF.js) to render the referenced page, navigate pages and mark matching text-layer words. Word highlighting is approximate, **not verified geometric evidence coordinates**. On scanned/OCR-only pages, the source excerpt remains visible alongside the original page; no fabricated overlay is displayed. Text-only and image documents retain the existing page-text interface.
+
+Run `npm install` in `frontend` to install the added `react-pdf` dependency. See [PHASE2_STEP3_TESTING.md](PHASE2_STEP3_TESTING.md).
+
+Limitations: large/complex PDFs may increase memory use; offline PDF.js worker assets must be bundled by Vite. This is a locally demonstrated MVP viewer, not approval for public confidential-document hosting.
