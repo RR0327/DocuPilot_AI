@@ -49,7 +49,7 @@ test.beforeEach(async ({ page, context }) => {
   });
 });
 async function signIn(page) {
-  await page.goto('/');
+  await page.goto('/login');
   await page.getByLabel('Username').fill('demo');
   await page.getByLabel('Password').fill('secret');
   await page.getByRole('button',{name:'Sign in'}).click();
@@ -62,7 +62,7 @@ test('authenticated document extraction, page evidence and sign out',async({page
   await page.getByRole('button',{name:'View pages'}).first().click();
   await expect(page.getByText('Refunds within thirty days.')).toBeVisible();
   await page.getByRole('button',{name:'Sign out'}).click();
-  await expect(page.getByRole('button',{name:'Sign in'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Login'}).first()).toBeVisible();
 });
 test('document Q&A displays page-level supporting evidence',async({page})=>{
   await signIn(page);
@@ -79,7 +79,7 @@ test('local validation rejects an oversized upload',async({page})=>{
   await expect(page.getByRole('alert')).toContainText('10 MiB');
 });
 test('invalid authentication retains login screen',async({page})=>{
-  await page.goto('/');
+  await page.goto('/login');
   await page.getByLabel('Username').fill('invalid');
   await page.getByLabel('Password').fill('password');
   await page.getByRole('button',{name:'Sign in'}).click();
@@ -98,10 +98,10 @@ test('unauthenticated API request never reveals private document metadata', asyn
 
 test('3-page workflow: home -> register -> login -> dashboard and logout -> home', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Turn documents into decisions.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Turn Unstructured Documents Into Instant, Auditable Decisions.' })).toBeVisible();
 
   // 1. Home page -> Registration
-  await page.getByRole('button', { name: 'Register' }).first().click();
+  await page.getByRole('button', { name: 'Get Started' }).click();
   await expect(page.getByRole('heading', { name: 'Create your workspace account' })).toBeVisible();
 
   // Fill registration form
@@ -115,7 +115,7 @@ test('3-page workflow: home -> register -> login -> dashboard and logout -> home
 
   // Back to home test
   await page.getByRole('button', { name: 'Return to Home' }).click();
-  await expect(page.getByRole('heading', { name: 'Turn documents into decisions.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Turn Unstructured Documents Into Instant, Auditable Decisions.' })).toBeVisible();
 
   // 3. Home page -> Login -> Dashboard
   await page.getByRole('button', { name: 'Login' }).first().click();
@@ -127,5 +127,5 @@ test('3-page workflow: home -> register -> login -> dashboard and logout -> home
 
   // 4. Dashboard -> Logout -> Home
   await page.getByRole('button', { name: 'Sign out' }).click();
-  await expect(page.getByRole('heading', { name: 'Turn documents into decisions.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Turn Unstructured Documents Into Instant, Auditable Decisions.' })).toBeVisible();
 });

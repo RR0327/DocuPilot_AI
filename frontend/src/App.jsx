@@ -23,9 +23,19 @@ function Card({ label, value, detail }) {
 }
 function authError(error) { return error instanceof Error ? error.message : String(error); }
 
+function getInitialPage() {
+  if (typeof window === 'undefined') return 'home';
+  const path = window.location.pathname.toLowerCase();
+  const hash = window.location.hash.toLowerCase();
+  if (path === '/login' || hash === '#/login' || hash === '#login') return 'login';
+  if (path === '/register' || hash === '#/register' || hash === '#register') return 'register';
+  return 'home';
+}
+
 export default function App() {
   const [credentials, setCredentials] = useState(null);
-  const [publicPage, setPublicPage] = useState('home');
+  const [publicPage, setPublicPage] = useState(getInitialPage);
+  const [previewTab, setPreviewTab] = useState('invoice');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginBusy, setLoginBusy] = useState(false);
@@ -82,6 +92,22 @@ export default function App() {
   useEffect(() => { if (credentials) { loadDocs(credentials); loadInvoices(credentials); } }, [credentials, loadDocs, loadInvoices]);
   useEffect(() => { let active = true; currentSession().then(session => { if (active && session.authenticated) setCredentials({username: session.username, mode: 'session'}); }).catch(() => {}); return () => {active=false;}; }, []);
 
+  const navigate = useCallback((page) => {
+    setPublicPage(page);
+    const path = page === 'home' ? '/' : `/${page}`;
+    if (typeof window !== 'undefined' && window.location.pathname !== path) {
+      window.history.pushState({ page }, '', path);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setPublicPage(getInitialPage());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   async function handleRegister(event) {
     event.preventDefault();
     setRegError('');
@@ -102,8 +128,8 @@ export default function App() {
       setRegPassword('');
       setRegConfirm('');
       setTimeout(() => {
-        setPublicPage('login');
-      }, 1000);
+        navigate('login');
+      }, 900);
     } catch (error) {
       setRegError(authError(error));
     } finally {
@@ -124,7 +150,7 @@ export default function App() {
   async function logout() {
     try { await signOut(); } catch (error) { setLoginError(authError(error)); }
     setCredentials(null);
-    setPublicPage('home');
+    navigate('home');
     setTab('documents');
     setPassword('');
     setUsername('');
@@ -228,11 +254,11 @@ export default function App() {
       return (
         <div className="dedicated-auth-page">
           <header className="dedicated-auth-header">
-            <div className="brand" role="button" tabIndex={0} onClick={() => setPublicPage('home')} style={{ cursor: 'pointer' }}>
+            <div className="brand" role="button" tabIndex={0} onClick={() => navigate('home')} style={{ cursor: 'pointer' }}>
               <span className="brand-icon">D</span>
               <span>DocuPilot <b>AI</b></span>
             </div>
-            <button className="secondary" type="button" onClick={() => setPublicPage('home')}>← Back to Home</button>
+            <button className="secondary" type="button" onClick={() => navigate('home')}>← Back to Home</button>
           </header>
           <main className="dedicated-auth-body">
             <div className="auth-card-wide">
@@ -256,8 +282,8 @@ export default function App() {
               <Message text={regError} kind="error" onClose={() => setRegError('')} />
               <Message text={regSuccess} kind="info" onClose={() => setRegSuccess('')} />
               <div className="auth-switch-row">
-                <span>Already registered? <button type="button" onClick={() => { setPublicPage('login'); setUsername(regUsername); }}>Sign in here →</button></span>
-                <button type="button" onClick={() => setPublicPage('home')}>Return to Home</button>
+                <span>Already registered? <button type="button" onClick={() => { navigate('login'); setUsername(regUsername); }}>Sign in here →</button></span>
+                <button type="button" onClick={() => navigate('home')}>Return to Home</button>
               </div>
             </div>
           </main>
@@ -269,11 +295,11 @@ export default function App() {
       return (
         <div className="dedicated-auth-page">
           <header className="dedicated-auth-header">
-            <div className="brand" role="button" tabIndex={0} onClick={() => setPublicPage('home')} style={{ cursor: 'pointer' }}>
+            <div className="brand" role="button" tabIndex={0} onClick={() => navigate('home')} style={{ cursor: 'pointer' }}>
               <span className="brand-icon">D</span>
               <span>DocuPilot <b>AI</b></span>
             </div>
-            <button className="secondary" type="button" onClick={() => setPublicPage('home')}>← Back to Home</button>
+            <button className="secondary" type="button" onClick={() => navigate('home')}>← Back to Home</button>
           </header>
           <main className="dedicated-auth-body">
             <div className="auth-card-wide">
@@ -296,8 +322,8 @@ export default function App() {
                 Demo accounts: <strong>alice</strong> or <strong>bob</strong> · Password: <code>DemoPass2026!Secure</code>
               </div>
               <div className="auth-switch-row">
-                <span>Need an account? <button type="button" onClick={() => setPublicPage('register')}>Register now →</button></span>
-                <button type="button" onClick={() => setPublicPage('home')}>Return to Home</button>
+                <span>Need an account? <button type="button" onClick={() => navigate('register')}>Register now →</button></span>
+                <button type="button" onClick={() => navigate('home')}>Return to Home</button>
               </div>
               <div className="security-note">
                 Credentials are kept in memory only; authentication uses a CSRF-protected HttpOnly session cookie.
@@ -308,86 +334,177 @@ export default function App() {
       );
     }
 
-    // Default: Home Page
+    // Default: Perfect, Full-Featured Home Page
     return (
       <div className="home-view">
         <header className="site-header">
-          <div className="brand" role="button" tabIndex={0} onClick={() => setPublicPage('home')} style={{ cursor: 'pointer' }}>
+          <div className="brand" role="button" tabIndex={0} onClick={() => navigate('home')} style={{ cursor: 'pointer' }}>
             <span className="brand-icon">D</span>
             <span>DocuPilot <b>AI</b></span>
           </div>
           <nav className="site-header-nav" aria-label="Main Navigation">
-            <a href="#features">Features</a>
+            <a href="#capabilities">Capabilities</a>
             <a href="#workflow">Workflow</a>
-            <button type="button" className="btn-register" onClick={() => setPublicPage('register')}>Register</button>
-            <button type="button" className="btn-login" onClick={() => setPublicPage('login')}>Login</button>
+            <a href="#security">Security</a>
+            <a href="#faq">FAQ</a>
+            <button type="button" className="btn-login" onClick={() => navigate('login')}>Login</button>
+            <button type="button" className="btn-register" onClick={() => navigate('register')}>Get Started</button>
           </nav>
         </header>
 
         <main className="home-content">
-          <section className="hero-grid">
-            <div className="hero-copy">
-              <span className="eyebrow">TECH_INNOVATORS · INTELLIGENT DOCUMENT WORKSPACE</span>
-              <h1>Turn documents into decisions.</h1>
-              <p className="hero-subtitle">
-                Private, evidence-grounded document intelligence with local OCR, automated invoice extraction, hybrid semantic Q&A, and human-in-the-loop review. Built for audit reliability with zero data leakage.
-              </p>
-              <div className="hero-badges">
-                <span className="hero-badge">🔒 100% Local & Private (SQLite3)</span>
-                <span className="hero-badge">⚡ Local Tesseract OCR</span>
-                <span className="hero-badge">📑 Auditable Evidence Viewer</span>
-                <span className="hero-badge">🛡️ CSRF Session Security</span>
-              </div>
-              <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '14px' }}>
-                <button type="button" className="primary" style={{ padding: '12px 24px', fontSize: '14px' }} onClick={() => setPublicPage('register')}>
-                  🚀 Register New Account
-                </button>
-                <button type="button" className="secondary" style={{ padding: '12px 24px', fontSize: '14px' }} onClick={() => setPublicPage('login')}>
-                  🔐 Workspace Login
-                </button>
-              </div>
+          <section className="hero-center">
+            <div className="hero-pill">
+              <span className="hero-pill-dot" />
+              <span>Tech_Innovators · Private On-Premises Document Intelligence</span>
+            </div>
+            <h1>Turn Unstructured Documents Into Instant, Auditable Decisions.</h1>
+            <p className="hero-subtitle">
+              A private, enterprise-grade document intelligence workspace. Extract text with local OCR, parse multi-currency invoice line items, and run hybrid semantic Q&A with exact source passage citations. Zero cloud data leaks.
+            </p>
+            <div className="hero-cta-group">
+              <button type="button" className="btn-hero-primary" onClick={() => navigate('register')}>
+                🚀 Create Free Account
+              </button>
+              <button type="button" className="btn-hero-secondary" onClick={() => navigate('login')}>
+                🔐 Access Workspace (Sign In)
+              </button>
             </div>
 
-            <div className="login-panel" style={{ width: '100%' }}>
-              <div className="brand"><span className="brand-icon">D</span><span>DocuPilot <b>AI</b></span></div>
-              <span className="eyebrow">FAST ACCESS</span>
-              <h2 style={{ margin: '8px 0 10px', fontSize: '20px' }}>Sign in to Workspace</h2>
-              <p className="muted" style={{ fontSize: '13px', margin: '0 0 16px' }}>
-                Access your private documents, review queue and financial analytics.
-              </p>
-              <Message text={regSuccess} kind="info" onClose={() => setRegSuccess('')} />
-              <form onSubmit={login} className="form-stack" style={{ marginTop: '14px' }}>
-                <label>Username
-                  <input required autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} />
-                </label>
-                <label>Password
-                  <input required type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} />
-                </label>
-                <button className="primary" disabled={loginBusy}>{loginBusy ? 'Signing in…' : 'Sign in'}</button>
-              </form>
-              <Message text={loginError} kind="error" onClose={() => setLoginError('')} />
-              <div style={{ marginTop: '14px', fontSize: '12px', color: '#8fa5be' }}>
-                Demo: <strong>alice</strong> / <strong>bob</strong> · Pass: <code>DemoPass2026!Secure</code>
+            <div className="hero-stats">
+              <div className="stat-box">
+                <strong>100%</strong>
+                <span>Local Data Sovereignty</span>
               </div>
-              <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #233752', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
-                <span className="muted">Need an account?</span>
-                <button type="button" style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontWeight: '700', cursor: 'pointer' }} onClick={() => setPublicPage('register')}>
-                  Create account →
-                </button>
+              <div className="stat-box">
+                <strong>0 B</strong>
+                <span>Cloud Data Leakage</span>
               </div>
-              <div className="security-note">
-                Session-only authentication. Documents remain owner-isolated on this system.
+              <div className="stat-box">
+                <strong>Multi-Page</strong>
+                <span>Tesseract OCR & Layout</span>
+              </div>
+              <div className="stat-box">
+                <strong>&lt; 1s</strong>
+                <span>Extractive Q&A Search</span>
               </div>
             </div>
           </section>
 
+          {/* Interactive Technology Inspector Mockup */}
+          <section className="preview-showcase">
+            <div className="preview-header">
+              <div className="window-dots">
+                <span className="dot red" />
+                <span className="dot yellow" />
+                <span className="dot green" />
+              </div>
+              <div className="preview-tabs">
+                <button type="button" className={`preview-tab ${previewTab === 'invoice' ? 'active' : ''}`} onClick={() => setPreviewTab('invoice')}>
+                  🧾 Invoice Extraction Preview
+                </button>
+                <button type="button" className={`preview-tab ${previewTab === 'qa' ? 'active' : ''}`} onClick={() => setPreviewTab('qa')}>
+                  🔍 Grounded Evidence Q&amp;A
+                </button>
+                <button type="button" className={`preview-tab ${previewTab === 'ocr' ? 'active' : ''}`} onClick={() => setPreviewTab('ocr')}>
+                  📄 Local OCR &amp; Layout
+                </button>
+              </div>
+            </div>
+
+            <div className="preview-body">
+              {previewTab === 'invoice' && (
+                <>
+                  <div className="preview-card-col">
+                    <h4><span>📑</span> Input: Invoice_2026_Global.pdf</h4>
+                    <div className="preview-meta-row"><span>Document Type:</span><strong>PDF / Scanned Form</strong></div>
+                    <div className="preview-meta-row"><span>Processing Pipeline:</span><strong>Local Tesseract 5 + Layout Parser</strong></div>
+                    <div className="preview-meta-row"><span>Owner Security:</span><strong>Isolated Private Media (SQLite3)</strong></div>
+                    <div style={{ marginTop: '12px' }}>
+                      <span className="tag-badge">Multi-Currency</span>
+                      <span className="tag-badge">Line Items Itemized</span>
+                      <span className="tag-badge">Status Auditable</span>
+                    </div>
+                  </div>
+                  <div className="preview-card-col">
+                    <h4><span>⚡</span> Extracted Financial Structure</h4>
+                    <div className="preview-code-block">
+{`{
+  "supplier": "ACME Industrial Supplies Ltd.",
+  "invoice_number": "INV-2026-0894",
+  "due_date": "2026-11-15",
+  "total": "14,250.00",
+  "currency": "USD",
+  "line_items_count": 3,
+  "confidence_score": 0.98,
+  "validation_status": "audited_pass"
+}`}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {previewTab === 'qa' && (
+                <>
+                  <div className="preview-card-col">
+                    <h4><span>❓</span> Query: "What is the return eligibility window?"</h4>
+                    <p style={{ fontSize: '13px', color: '#9cb1c9', lineHeight: '1.6' }}>
+                      Hybrid semantic search executes locally using E5 embeddings cross-referenced against exact BM25 keyword chunks.
+                    </p>
+                    <div style={{ marginTop: '14px' }}>
+                      <span className="tag-badge">Hybrid Mode</span>
+                      <span className="tag-badge">Chunk #18</span>
+                      <span className="tag-badge">Page 4 Citation</span>
+                    </div>
+                  </div>
+                  <div className="preview-card-col">
+                    <h4><span>🎯</span> Verified Supporting Passage</h4>
+                    <div className="preview-code-block" style={{ color: '#bae6fd' }}>
+{`"Supporting Evidence [Page 4 · Chunk 18]:
+Refund claims for damaged shipments must be
+submitted within 30 days of bill of lading delivery.
+All returned items must include original RMA slip."`}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {previewTab === 'ocr' && (
+                <>
+                  <div className="preview-card-col">
+                    <h4><span>⚙️</span> Local Windows Tesseract OCR</h4>
+                    <div className="preview-meta-row"><span>OCR Engine:</span><strong>Tesseract v5.x (Native Host)</strong></div>
+                    <div className="preview-meta-row"><span>Language Mode:</span><strong>English (eng)</strong></div>
+                    <div className="preview-meta-row"><span>Network Access:</span><strong>Air-Gapped (Zero Outbound)</strong></div>
+                    <div style={{ marginTop: '14px' }}>
+                      <span className="tag-badge">Offline CPU</span>
+                      <span className="tag-badge">UTF-8 Normalized</span>
+                    </div>
+                  </div>
+                  <div className="preview-card-col">
+                    <h4><span>📊</span> OCR Telemetry &amp; Ingestion</h4>
+                    <div className="preview-code-block">
+{`[OCR Engine Stream]:
+Ingesting: vendor_receipt_oct26.png
+Image Dimensions: 2480 x 3508 px (300 DPI)
+Text Extracted: 2,148 characters across 1 page
+Bounding Boxes Generated: 42
+Media Encapsulation: private_media/ (No Public URL)`}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+
+          {/* 3-Step Lifecycle Workflow */}
           <section className="workflow-strip" id="workflow">
-            <h3>Workflow · From Registration to Intelligence</h3>
+            <h3>Three-Step Document Lifecycle</h3>
             <div className="workflow-steps-grid">
               <div className="workflow-step-card">
                 <span className="step-num">Step 01</span>
-                <h4>Registration</h4>
-                <p>Register an owner-isolated account on this local instance. Passwords are validated and salted securely in SQLite3.</p>
+                <h4>Account Registration</h4>
+                <p>Create an owner-isolated account on this local instance. Credentials and access tokens are strictly bound in SQLite3.</p>
               </div>
               <div className="workflow-step-card">
                 <span className="step-num">Step 02</span>
@@ -397,12 +514,13 @@ export default function App() {
               <div className="workflow-step-card">
                 <span className="step-num">Step 03</span>
                 <h4>Intelligent Dashboard</h4>
-                <p>Upload files, run local OCR, review invoice line items, and ask evidence-backed questions.</p>
+                <p>Upload documents, extract text with local OCR, parse invoice line items, and run hybrid semantic search with cited evidence.</p>
               </div>
             </div>
           </section>
 
-          <section className="features-section" id="features">
+          {/* Core Capabilities */}
+          <section className="features-section" id="capabilities">
             <h2>Core Platform Capabilities</h2>
             <p className="section-subtitle">
               DocuPilot AI brings enterprise-grade document intelligence to a zero-cloud-leakage, fully local installation.
@@ -410,33 +528,96 @@ export default function App() {
             <div className="features-grid">
               <div className="feature-card">
                 <div className="feature-card-icon">📄</div>
-                <h3>Local OCR & Private Storage</h3>
+                <h3>Local OCR &amp; Private Storage</h3>
                 <p>Processes PDF, TXT, PNG, and JPEG files using local Tesseract OCR. Documents are stored in private media roots with no public URLs.</p>
+                <div className="feature-tags">
+                  <span className="feature-tag">Tesseract OCR</span>
+                  <span className="feature-tag">Private Storage</span>
+                  <span className="feature-tag">Zero Cloud Leak</span>
+                </div>
               </div>
               <div className="feature-card">
                 <div className="feature-card-icon">🧾</div>
                 <h3>Invoice Intelligence</h3>
                 <p>Automatically derives totals, currencies, suppliers, due dates, and itemized line items with owner-audited payment lifecycle tracking.</p>
+                <div className="feature-tags">
+                  <span className="feature-tag">Line Items Parser</span>
+                  <span className="feature-tag">Multi-Currency</span>
+                  <span className="feature-tag">Due Dates</span>
+                </div>
               </div>
               <div className="feature-card">
                 <div className="feature-card-icon">🔍</div>
-                <h3>Evidence-Grounded Q&A</h3>
+                <h3>Evidence-Grounded Q&amp;A</h3>
                 <p>Keyword, multilingual semantic, and hybrid retrieval modes quote exact source passages and page numbers without hallucination.</p>
+                <div className="feature-tags">
+                  <span className="feature-tag">Hybrid Search</span>
+                  <span className="feature-tag">Multilingual E5</span>
+                  <span className="feature-tag">PDF Citations</span>
+                </div>
               </div>
               <div className="feature-card">
                 <div className="feature-card-icon">👥</div>
                 <h3>Human-in-the-Loop Review</h3>
                 <p>Confidence scores, classification reviews, and operator review queues ensure automated AI suggestions are verifiable by humans.</p>
+                <div className="feature-tags">
+                  <span className="feature-tag">Audit Triage</span>
+                  <span className="feature-tag">Confidence Metrics</span>
+                  <span className="feature-tag">Reliability Board</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Security & Compliance Spotlight */}
+          <section className="security-spotlight" id="security">
+            <h3>Enterprise Privacy &amp; Deployment Security</h3>
+            <p className="lead">Built to adhere strictly to local-first data protection standards and defensive deployment baselines.</p>
+            <div className="security-grid">
+              <div className="security-item">
+                <strong>🔒 Private Media Isolation</strong>
+                <span>Documents are stored in a dedicated private media folder with <code>MEDIA_URL = None</code>. Access requires authenticated socket streaming.</span>
+              </div>
+              <div className="security-item">
+                <strong>🛡️ Hardened Session Cookies</strong>
+                <span>CSRF protection and HttpOnly session cookies replace vulnerable recurring Basic Auth headers and browser token stores.</span>
+              </div>
+              <div className="security-item">
+                <strong>⚡ Lockout &amp; Rate Limiting</strong>
+                <span>Database-backed rate limiting enforces 5-attempt thresholds per IP/user bucket within 15-minute sliding windows.</span>
+              </div>
+              <div className="security-item">
+                <strong>👤 Strict Tenant Boundaries</strong>
+                <span>Every database query is scoped to document ownership. Cross-user document or invoice requests return clean HTTP 404 responses.</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Technical FAQ */}
+          <section className="faq-section" id="faq">
+            <h2>Frequently Asked Questions</h2>
+            <div className="faq-grid">
+              <div className="faq-card">
+                <h4>Can DocuPilot AI run completely offline?</h4>
+                <p>Yes. The entire processing pipeline—including Django backend, SQLite3 database, React frontend, and Tesseract OCR—runs 100% on your local Windows workstation with zero internet dependencies.</p>
+              </div>
+              <div className="faq-card">
+                <h4>How are documents protected from other users?</h4>
+                <p>All database models and file endpoints are filtered strictly by the authenticated user's ID at the ORM layer. Other users cannot enumerate, inspect, or download documents they do not own.</p>
+              </div>
+              <div className="faq-card">
+                <h4>What file formats are supported?</h4>
+                <p>DocuPilot natively supports PDF documents, UTF-8 TXT files, and PNG/JPEG images up to 10 MiB with automatic resolution and orientation normalization.</p>
               </div>
             </div>
           </section>
 
           <footer className="home-footer">
             <div>
-              <strong>DocuPilot AI</strong> · Tech_Innovators · Released under the MIT License.
+              <strong>DocuPilot AI</strong> · Developed by Tech_Innovators · MIT License.
             </div>
             <div>
-              Private & On-Premises · Local SQLite3 Database Baseline
+              Private &amp; On-Premises Architecture · Local SQLite3 Baseline
             </div>
           </footer>
         </main>
