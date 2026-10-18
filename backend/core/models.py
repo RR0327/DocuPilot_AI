@@ -132,3 +132,27 @@ class ExtractionReview(models.Model):
 
     class Meta:
         ordering = ["-reviewed_at", "-id"]
+
+
+class ProcessingJob(models.Model):
+    """One owner-scoped extraction attempt; Celery IDs never authorize access."""
+    class State(models.TextChoices):
+        QUEUED = "queued", "Queued"
+        RUNNING = "running", "Running"
+        SUCCEEDED = "succeeded", "Succeeded"
+        FAILED = "failed", "Failed"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="processing_jobs")
+    state = models.CharField(max_length=12, choices=State.choices, default=State.QUEUED)
+    attempt = models.PositiveIntegerField(default=1)
+    error_message = models.CharField(max_length=300, blank=True)
+    page_count = models.PositiveIntegerField(default=0)
+    character_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["document", "state"], name="processing_doc_state_idx")]

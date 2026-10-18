@@ -7,6 +7,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from .extraction import ExtractionError, extract_document
+from .models import ProcessingJob
+from .processing import queue_document, job_payload, BrokerUnavailable, ProcessingConflict
 from .invoice_extraction import InvoiceError, extract_invoice
 from .models import Document, ExtractedRecord, QuestionAnswer, InvoicePaymentState
 from .review import apply_review, review_details, quality_flags
@@ -70,16 +72,34 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="invoice/extract")
     def invoice_extract(self, request, pk=None):
         document = self.get_object()
+        if ProcessingJob.objects.filter(document=document, state__in=["queued", "running"]).exists():
+            return Response({"detail": "Background extraction is active; try again when it finishes."}, status=409)
         try:
             record = extract_invoice(document)
         except InvoiceError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         return Response(ExtractedRecordSerializer(record).data, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=["post"], url_path="extract-async")
+    def extract_async(self, request, pk=None):
+        document = self.get_object()
+        if not document.file:
+            return Response({"detail": "Document has no uploaded file"}, status=422)
+        try:
+            job = queue_document(document)
+        except BrokerUnavailable as exc:
+            return Response({"detail": str(exc)}, status=503)
+        except ProcessingConflict as exc:
+            return Response({"detail": str(exc)}, status=409)
+        response = Response(job_payload(job), status=202)
+        response["Cache-Control"] = "no-store"
+        return response
+
     @action(detail=True, methods=["post"])
     def extract(self, request, pk=None):
-        self.get_object()
         document = self.get_object()
+        if ProcessingJob.objects.filter(document=document, state__in=["queued", "running"]).exists():
+            return Response({"detail": "Background extraction is active; try again when it finishes."}, status=409)
         try:
             result = extract_document(document)
         except ExtractionError as exc:
@@ -260,3 +280,29 @@ def review_record(request, record_id):
         except ExtractedRecord.DoesNotExist:
             raise Http404
     return Response(review_details(record))
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def processing_job_detail(request, job_id):
+    job = get_object_or_404(ProcessingJob, pk=job_id, document__owner=request.user)
+    response = Response(job_payload(job))
+    response["Cache-Control"] = "no-store"
+    return response
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def retry_processing_job(request, job_id):
+    prior = get_object_or_404(ProcessingJob, pk=job_id, document__owner=request.user)
+    if prior.state != ProcessingJob.State.FAILED:
+        return Response({"detail": "Only failed jobs may be retried."}, status=409)
+    try:
+        job = queue_document(prior.document, retry_job=prior)
+    except BrokerUnavailable as exc:
+        return Response({"detail": str(exc)}, status=503)
+    except ProcessingConflict as exc:
+        return Response({"detail": str(exc)}, status=409)
+    response = Response(job_payload(job), status=202)
+    response["Cache-Control"] = "no-store"
+    return response

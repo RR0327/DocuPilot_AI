@@ -175,3 +175,9 @@ See [Phase 3 Step 1 testing instructions](PHASE3_STEP1_TESTING.md). SQLite3 rema
 Authenticated `GET /api/invoices/analytics/` supports `currency=BDT|USD|EUR|GBP`, `year=YYYY`, and `limit=1..50`. The response includes currency-specific invoice-value totals, dated monthly trends, top suppliers, excluded-record reasons, and source-value basis metadata. The **Supplier analytics** React navigation item displays Recharts line and bar charts with a currency selector. Approved human-review corrections are used; rejected invoice records are excluded. Values are based on invoice dates, **not confirmed cash payments**. No database migration is necessary.
 
 See [Phase 3 Step 2 testing and acceptance](PHASE3_STEP2_TESTING.md). Existing project links: [License](LICENSE) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md).
+
+## Phase 3 Step 3 — Optional background extraction
+
+DocuPilot AI can now run PDF/OCR extraction in a Celery worker, with Redis as broker and an owner-scoped SQLite3 `ProcessingJob` status record. This is **optional**; the default synchronous `POST /api/documents/{id}/extract/` endpoint continues working when Celery/Redis are absent. Enable with `DOCUPILOT_ASYNC_ENABLED=true` after installing `backend/requirements-async.txt` and running a local Redis broker and worker (`celery -A config worker --pool=solo --concurrency=1 --loglevel=info` on Windows).
+
+The Document workspace offers **Background extract**, job status updates and a retry action for failed jobs. Jobs have queued/running/succeeded/failed states, not percentage-complete telemetry. For exact commands, expected statuses, regression checks and security limitations see [Phase 3 Step 3 testing](PHASE3_STEP3_TESTING.md). No current features require external PostgreSQL or a paid AI API.

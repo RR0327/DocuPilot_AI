@@ -12,3 +12,7 @@ backend/private_media/
 
 frontend/playwright-report/
 frontend/test-results/
+
+# Optional Celery runtime files
+celerybeat-schedule
+*.pid

@@ -49,3 +49,12 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024
 DOCUPILOT_EMBEDDING_MODEL = os.getenv("DOCUPILOT_EMBEDDING_MODEL", "intfloat/multilingual-e5-small")
 DOCUPILOT_MODEL_OFFLINE = os.getenv("DOCUPILOT_MODEL_OFFLINE", "false").lower() == "true"
 DOCUPILOT_SEMANTIC_MIN_SCORE = float(os.getenv("DOCUPILOT_SEMANTIC_MIN_SCORE", "0.40"))
+
+# Optional asynchronous extraction, disabled by default to keep a simple local MVP.
+DOCUPILOT_ASYNC_ENABLED = os.getenv("DOCUPILOT_ASYNC_ENABLED", "false").lower() == "true"
+CELERY_BROKER_URL = os.getenv("DOCUPILOT_REDIS_URL", "redis://127.0.0.1:6379/0")
+CELERY_RESULT_BACKEND = None  # Job state stored in owner-scoped SQLite records.
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_TRACK_STARTED = False
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True

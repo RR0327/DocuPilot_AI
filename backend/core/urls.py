@@ -1,11 +1,13 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import DocumentViewSet, ask, health, upload, invoices, invoice_dashboard, invoice_report, invoice_export, invoice_payment_status, invoice_line_items, review_queue, review_record, invoice_analytics
+from .views import DocumentViewSet, ask, health, upload, invoices, invoice_dashboard, invoice_report, invoice_export, invoice_payment_status, invoice_line_items, review_queue, review_record, invoice_analytics, processing_job_detail, retry_processing_job
 
 router = DefaultRouter()
 router.register("documents", DocumentViewSet, basename="document")
 urlpatterns = [
     path("health/", health, name="health"),
+    path("processing-jobs/<uuid:job_id>/", processing_job_detail, name="processing-job-detail"),
+    path("processing-jobs/<uuid:job_id>/retry/", retry_processing_job, name="processing-job-retry"),
     path("documents/upload/", upload, name="document-upload"),
     path("ask/", ask, name="ask"),
     path("invoices/", invoices, name="invoices"),
