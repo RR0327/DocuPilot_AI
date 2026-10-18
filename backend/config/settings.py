@@ -44,3 +44,8 @@ DOCUPILOT_OCR_LANG = os.getenv("DOCUPILOT_OCR_LANG", "eng")
 MEDIA_ROOT = BASE_DIR / "private_media"
 DATA_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024
+
+# Optional multilingual CPU embeddings; keyword mode works without this dependency.
+DOCUPILOT_EMBEDDING_MODEL = os.getenv("DOCUPILOT_EMBEDDING_MODEL", "intfloat/multilingual-e5-small")
+DOCUPILOT_MODEL_OFFLINE = os.getenv("DOCUPILOT_MODEL_OFFLINE", "false").lower() == "true"
+DOCUPILOT_SEMANTIC_MIN_SCORE = float(os.getenv("DOCUPILOT_SEMANTIC_MIN_SCORE", "0.40"))
