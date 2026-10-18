@@ -4,8 +4,8 @@ DocuPilot AI is maintained by **Tech_Innovators**. The completed project is inte
 
 ## Supported Release
 
-| Release | Status |
-| --- | --- |
+| Release                                 | Status                                                                                                       |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | Final hackathon / demonstration release | Security fixes and regression reports accepted for controlled demonstration; no production support guarantee |
 
 ## Implemented Security Controls
@@ -37,5 +37,3 @@ No dedicated security reporting email or response-time guarantee is currently pu
 - Backup archives **are not encrypted** by the utility; encrypt and restrict access before off-site storage.
 - Classification uses explainable heuristic rules. Synthetic evaluation and owner feedback do not establish independent real-world accuracy; financial extraction requires human verification.
 - Only upload synthetic or properly authorized documents to demonstration environments. Avoid regulated or confidential production data until required controls and approval are completed.
-
-Security regression instructions are available in [the testing evidence index](handoff/04_TESTING_EVIDENCE_INDEX.md) and [the deployment guide](handoff/02_WINDOWS_DEPLOYMENT_GUIDE.md).

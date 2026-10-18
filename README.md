@@ -11,8 +11,8 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![Tesseract OCR](https://img.shields.io/badge/OCR-Tesseract-5A5A5A)](https://github.com/tesseract-ocr/tesseract)
-[![Celery](https://img.shields.io/badge/Celery-Optional-37814A?logo=celery&logoColor=white)](https://docs.celeryq.dev/)
-[![Redis](https://img.shields.io/badge/Redis-Optional-DC382D?logo=redis&logoColor=white)](https://redis.io/)
+[![Celery](https://img.shields.io/badge/Celery-37814A?logo=celery&logoColor=white)](https://docs.celeryq.dev/)
+[![Redis](https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white)](https://redis.io/)
 [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## Overview
@@ -38,15 +38,15 @@ DocuPilot AI is a document intelligence web application for securely processing 
 
 ## Technology Stack
 
-| Layer | Technologies |
-| --- | --- |
-| Frontend | React 19, Vite 6, Tailwind CSS 3, Recharts, react-pdf |
-| Backend | Python 3.12, Django, Django REST Framework |
-| Database | SQLite3 |
-| Extraction and OCR | PyMuPDF, Tesseract OCR, pytesseract, Pillow |
-| Search | Keyword search; optional local multilingual embeddings and hybrid retrieval |
-| Background processing (optional) | Celery, Redis |
-| Testing | Django tests, Node.js unit tests, Playwright browser tests |
+| Layer                 | Technologies                                                                |
+| --------------------- | --------------------------------------------------------------------------- |
+| Frontend              | React 19, Vite 6, Tailwind CSS 3, Recharts, react-pdf                       |
+| Backend               | Python 3.12, Django, Django REST Framework                                  |
+| Database              | SQLite3                                                                     |
+| Extraction and OCR    | PyMuPDF, Tesseract OCR, pytesseract, Pillow                                 |
+| Search                | Keyword search; optional local multilingual embeddings and hybrid retrieval |
+| Background processing | Celery, Redis                                                               |
+| Testing               | Django tests, Node.js unit tests, Playwright browser tests                  |
 
 ## Getting Started (Windows 11)
 
@@ -108,12 +108,7 @@ Restore is a **dry run by default**. A real restore requires stopping Django/Cel
 
 ## Project Documentation
 
-- [Architecture and System Design](handoff/01_ARCHITECTURE_AND_SYSTEM_DESIGN.md)
-- [Windows Deployment Guide](handoff/02_WINDOWS_DEPLOYMENT_GUIDE.md)
-- [Demonstration Script](handoff/03_DEMONSTRATION_SCRIPT.md)
-- [Testing Evidence Index](handoff/04_TESTING_EVIDENCE_INDEX.md)
-- [Security and Privacy Limitations](handoff/05_SECURITY_PRIVACY_AND_LIMITATIONS.md)
-- [Backup and Recovery Guide](handoff/06_BACKUP_AND_RECOVERY_GUIDE.md)
+- [Architecture and System Design](handoff/ARCHITECTURE_AND_SYSTEM_DESIGN.md)
 
 ## Contributing
 
