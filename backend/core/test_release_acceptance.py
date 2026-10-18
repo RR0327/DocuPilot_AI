@@ -60,7 +60,8 @@ class AcceptanceTests(TestCase):
 
     def test_release_command_generates_local_report(self):
         out = StringIO()
-        call_command('release_acceptance', stdout=out)
+        with override_settings(DEBUG=True):
+            call_command('release_acceptance', stdout=out)
         report = json.loads(out.getvalue())
         self.assertTrue(report['passed'])
         self.assertEqual(report['phase'], '5.3')
