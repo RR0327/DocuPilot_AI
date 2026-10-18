@@ -56,3 +56,13 @@ test('invalid authentication retains login screen',async({page})=>{
   await page.getByRole('button',{name:'Sign in'}).click();
   await expect(page.getByRole('alert')).toContainText('Authentication failed');
 });
+
+test('unauthenticated API request never reveals private document metadata', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(async () => {
+    const response = await fetch('/api/documents/');
+    return { status: response.status, payload: await response.json() };
+  });
+  expect(result.status).toBe(401);
+  expect(JSON.stringify(result.payload)).not.toContain('Refund Policy');
+});

@@ -7,8 +7,8 @@ load_dotenv(BASE_DIR.parent / ".env")
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "development-only-not-for-production")
 DEBUG = os.getenv("DJANGO_DEBUG", "false").lower() == "true"
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
-if not DEBUG and SECRET_KEY == "development-only-not-for-production":
-    raise RuntimeError("Set DJANGO_SECRET_KEY before running outside development")
+if not DEBUG and (SECRET_KEY in {"development-only-not-for-production", "replace-with-a-long-random-value"} or len(SECRET_KEY) < 50):
+    raise RuntimeError("Production DJANGO_SECRET_KEY must be a unique random value of at least 50 characters")
 INSTALLED_APPS = ["django.contrib.admin", "django.contrib.auth", "django.contrib.contenttypes", "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles", "rest_framework", "core"]
 MIDDLEWARE = ["django.middleware.security.SecurityMiddleware", "django.contrib.sessions.middleware.SessionMiddleware", "django.middleware.common.CommonMiddleware", "django.middleware.csrf.CsrfViewMiddleware", "django.contrib.auth.middleware.AuthenticationMiddleware", "django.contrib.messages.middleware.MessageMiddleware", "django.middleware.clickjacking.XFrameOptionsMiddleware"]
 ROOT_URLCONF = "config.urls"
@@ -62,3 +62,24 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 # Recovery thresholds are intentionally conservative for long-running OCR.
 DOCUPILOT_STALE_QUEUE_MINUTES = int(os.getenv("DOCUPILOT_STALE_QUEUE_MINUTES", "30"))
 DOCUPILOT_STALE_RUNNING_MINUTES = int(os.getenv("DOCUPILOT_STALE_RUNNING_MINUTES", "120"))
+
+# Phase 5: deployment security baseline. Local HTTP remains possible when DEBUG=true.
+SECURE_SSL_REDIRECT = not DEBUG and os.getenv("DJANGO_SECURE_SSL_REDIRECT", "true").lower() == "true"
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+X_FRAME_OPTIONS = "DENY"
+SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_HSTS_SECONDS", "0")) if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = bool(SECURE_HSTS_SECONDS) and os.getenv("DJANGO_HSTS_INCLUDE_SUBDOMAINS", "false").lower() == "true"
+SECURE_HSTS_PRELOAD = False
+# Only configure reverse proxy trust when that proxy is actually controlled by the operator.
+if os.getenv("DJANGO_TRUST_PROXY_HTTPS", "false").lower() == "true":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = [x.strip() for x in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if x.strip()]
+SESSION_COOKIE_AGE = int(os.getenv("DJANGO_SESSION_AGE", "3600"))
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# Do not expose private files as static media or add permissive CORS middleware.

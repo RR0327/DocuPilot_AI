@@ -16,3 +16,10 @@ frontend/test-results/
 # Optional Celery runtime files
 celerybeat-schedule
 *.pid
+
+# Phase 5 deployment artifacts and private backups
+backups/
+*.backup.zip
+*.backup.sqlite3
+release-reports/
+*.log

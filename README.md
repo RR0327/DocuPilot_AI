@@ -232,3 +232,11 @@ See [Phase 4 Step 5 testing](PHASE4_STEP5_TESTING.md) for acceptance instruction
 ## Phase 4 Step 6 — reliability and adjudication
 
 See [Phase 4 Step 6 testing guide](PHASE4_STEP6_TESTING.md). An independent two-reviewer and adjudicator dataset can be evaluated offline with `python manage.py evaluate_adjudicated_classification --dataset evaluation/adjudicated_private.json --output adjudicated_report.json`. The template under `backend/evaluation/adjudicated_labels_TEMPLATE.json` is **not** real ground truth. The owner-only `/api/classification/reliability/` endpoint and Reliability React tab show operational errors, not accuracy. No migration is required.
+
+## Phase 5 Step 1 — Integration, security baseline and recoverable backups
+
+- Run `python backend/manage.py release_check` (with a configured `.env`) for the release configuration gate. For production use a unique `DJANGO_SECRET_KEY`, HTTPS, restricted hosts, and a production application server. `DEBUG=true` is **local-only**.
+- Run `python scripts/backup_restore.py backup --archive backups/docupilot_snapshot.backup.zip` and `verify --archive ...` for SQLite3 snapshot and private media checksums. Restore is intentionally dry-run unless explicitly confirmed; it refuses to overwrite any existing data.
+- Execute `python -m unittest discover -s scripts -p "test_*.py"`, Django tests, frontend tests, Playwright and the React build as documented in [PHASE5_STEP1_TESTING.md](PHASE5_STEP1_TESTING.md).
+- Preserve [LICENSE](LICENSE), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). This update does not add PostgreSQL or change database migrations.
+- **Do not call this a public-production-ready deployment:** HTTP Basic authentication and rate limiting need a dedicated security remediation step. Independent classification evaluation is still contingent on genuine adjudicated labels.
