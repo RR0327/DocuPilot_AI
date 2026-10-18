@@ -1,7 +1,7 @@
 # DocuPilot AI
 
 **Intelligent Document Processing & Knowledge Assistant**  
-**Copyright © 2026 Tech_Innovators** · **Phase 1 Step 6 — React MVP workspace**
+**Copyright © 2026 Tech_Innovators** · **Phase 2 Step 2 — SQLite Hybrid Retrieval**
 
 [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Contributing](https://img.shields.io/badge/Contributing-Guidelines-green.svg)](CONTRIBUTING.md)
@@ -22,7 +22,7 @@ DocuPilot AI is a Django + React document intelligence application. Authorized u
 - Invoice dashboard with owner-set payment status (`unknown`, `pending`, `paid`, `disputed`), due-date filters, currency-separated pending totals, and CSV export.
 - Error, loading and empty states; mobile-responsive frontend; frontend API regression tests and backend Django tests.
 
-**Limitations:** This is a local-development MVP, not a production-secure deployment. HTTP Basic credentials are transmitted in an Authorization header on every request; **never expose this service without TLS/HTTPS and a reviewed authentication model**. Scanned PDFs require future OCR. Keyword Q&A is extractive, not an LLM answer. Financial fields require human verification. The document listing currently shows the first page (20 documents) from Django's paginated API. The React invoice dashboard uses backend APIs rather than direct DB access.
+**Limitations:** This is a local-development MVP, not a production-secure deployment. HTTP Basic credentials are transmitted in an Authorization header on every request; **never expose this service without TLS/HTTPS and a reviewed authentication model**. Scanned PDFs and PNG/JPEG can use optional Tesseract OCR. Q&A is extractive, not an LLM answer. Financial fields require human verification. The document listing currently shows the first page (20 documents) from Django's paginated API. The React invoice dashboard uses backend APIs rather than direct DB access.
 
 ## Technology
 
@@ -114,3 +114,12 @@ Frontend document pagination now loads all owner-scoped pages. Client-side PDF/T
 ## Phase 2 Step 1 — Local OCR (PDF and images)
 
 Supports scanned PDFs (page-wise fallback to OCR), PNG and JPEG using **Tesseract + pytesseract + Pillow**, with the original PyMuPDF/TXT extraction intact. Files stay private. See [Phase 2 Step 1 Windows 11 testing](PHASE2_STEP1_TESTING.md) for setup, verification and OCR limitations. On Windows install Tesseract separately; set `DOCUPILOT_TESSERACT_CMD` when its executable is not on PATH. Optional Bangla recognition requires `ben.traineddata`. Existing [LICENSE](LICENSE), [CONTRIBUTING.md](CONTRIBUTING.md), and [SECURITY.md](SECURITY.md) links remain active.
+
+
+## Phase 2 Step 2 — Multilingual semantic and hybrid retrieval
+
+Document evidence search now supports three optional request modes: `keyword` (default, no model required), `semantic` (local multilingual embeddings), and `hybrid` (semantic + keyword using reciprocal rank fusion). All retrieved rows are restricted to the authenticated owner's completed documents and optional explicit document IDs. Source excerpts and page numbers remain unchanged; they are not synthesized answers. The local model is only loaded for semantic or hybrid requests. Cached vectors live in the SQLite `ChunkEmbedding` table and are cascade-deleted when chunks are rebuilt.
+
+To enable semantic search on Windows, install `backend/requirements-semantic.txt` in the backend virtual environment. First inference may download `intfloat/multilingual-e5-small`, which must be available locally for offline mode. The backend returns an explicit 503 when the semantic model is missing; default keyword requests keep working. The use of a local model does not imply perfect Bangla performance.
+
+`POST /api/ask/` accepts an optional `mode` of `keyword`, `semantic`, or `hybrid`; default remains `keyword`. A source reference now includes `retrieval_method`, and the response includes `retrieval_mode`. See [Phase 2 Step 2 Windows testing](PHASE2_STEP2_TESTING.md) for complete instructions and acceptance criteria.
