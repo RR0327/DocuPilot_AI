@@ -134,28 +134,3 @@ The React viewer uses `react-pdf` (PDF.js) to render the referenced page, naviga
 Run `npm install` in `frontend` to install the added `react-pdf` dependency. See [PHASE2_STEP3_TESTING.md](PHASE2_STEP3_TESTING.md).
 
 Limitations: large/complex PDFs may increase memory use; offline PDF.js worker assets must be bundled by Vite. This is a locally demonstrated MVP viewer, not approval for public confidential-document hosting.
-
-## Phase 2 Step 4 — Invoice line items
-
-After processing a document, select **Extract invoice**. Recognized table rows are saved
-as `InvoiceLineItem` records linked to their immutable extraction record. In **Invoice
-intelligence**, click **Line items** to inspect each row, quantity, unit price, reported
-line total, arithmetic validation, and supporting page. The owner-scoped endpoint is
-`GET /api/invoices/{record_id}/line-items/`.
-
-The rule-based parser requires an explicit column heading containing description/item,
-quantity, unit price, and amount/total; then it recognizes simple, aligned or pipe-
-separated rows. Unknown, malformed, non-tabular and complex OCR layouts are **not**
-filled with guessed values. A row is `matched` only when the reported amount agrees
-with quantity times unit price to a cent; otherwise it is `mismatch`. The entire
-invoice remains `unreviewed` until a human verifies it against the original PDF.
-
-This step uses the original SQLite3 database and migration
-`core.0006_invoicelineitem`; it does not require PostgreSQL, paid models, or new
-frontend dependencies. See [Phase 2 Step 4 testing](PHASE2_STEP4_TESTING.md).
-
-## Phase 2 Step 5 — Evidence and extraction quality evaluation
-
-Adds reproducible local quality metrics using the existing keyword, semantic and hybrid retrieval code paths. The benchmark command (`python manage.py evaluate_docupilot --mode keyword`) creates isolated synthetic documents, measures Recall@5, MRR, no-answer abstention and exact citation provenance, measures invoice exact-field extraction, and rolls back its temporary database records. It also reports *illustrative* OCR character-error rates from supplied reference/prediction text; these are **not live OCR accuracy claims**. Additional review warnings flag due dates preceding invoice dates and recognized line totals inconsistent with a stated subtotal. No source values are modified automatically. The benchmark corpus is a smoke test, not evidence of real-world reliability.
-
-See [Phase 2 Step 5 testing and release gate](PHASE2_STEP5_TESTING.md) for Windows 11 commands and real-data evaluation requirements. SQLite3 and all prior functionality, private storage, and governance documents are preserved. **Phase 2 is only ready for a local demonstration after user-executed acceptance tests; public deployment requires separate security and operations work.**
