@@ -1,0 +1,67 @@
+{
+  "documents": [
+    {
+      "key": "Refund Policy",
+      "pages": [
+        "Refund requests can be submitted within thirty days of purchase."
+      ]
+    },
+    {
+      "key": "Delivery Policy",
+      "pages": [
+        "Standard delivery takes five working days after dispatch."
+      ]
+    },
+    {
+      "key": "Invoice Sample",
+      "pages": [
+        "Supplier: Example Ltd\nInvoice No: TEST-01\nInvoice Date: 2026-10-12\nDue Date: 2026-11-11\nSubtotal: BDT 200.00\nTax: BDT 30.00\nTotal Amount: BDT 230.00"
+      ]
+    }
+  ],
+  "queries": [
+    {
+      "question": "refund requests",
+      "expected": "Refund Policy"
+    },
+    {
+      "question": "delivery dispatch",
+      "expected": "Delivery Policy"
+    },
+    {
+      "question": "supplier invoice number",
+      "expected": "Invoice Sample"
+    },
+    {
+      "question": "astrophysics rocket launch",
+      "expected": null
+    }
+  ],
+  "invoices": [
+    {
+      "document": "Invoice Sample",
+      "expected_fields": {
+        "invoice_number": "TEST-01",
+        "supplier": "Example Ltd",
+        "invoice_date": "2026-10-12",
+        "due_date": "2026-11-11",
+        "subtotal": "200.00",
+        "tax": "30.00",
+        "total": "230.00",
+        "currency": "BDT"
+      }
+    }
+  ],
+  "ocr_samples": [
+    {
+      "name": "illustrative_english",
+      "reference": "Invoice 42",
+      "recognized": "Invoice 42"
+    },
+    {
+      "name": "illustrative_bangla",
+      "reference": "বাংলা লেখা",
+      "recognized": "বাংলা লেখা"
+    }
+  ]
+}
