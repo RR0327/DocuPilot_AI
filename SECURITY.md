@@ -1,39 +1,41 @@
 # Security Policy
 
-DocuPilot AI is maintained by **Tech_Innovators**.
+DocuPilot AI is maintained by **Tech_Innovators**. The completed project is intended for controlled demonstration and review. **Public Internet production deployment has not been independently approved.**
 
-## Supported versions
+## Supported Release
 
-| Version | Security support |
+| Release | Status |
 | --- | --- |
-| Phase 0 development starter (0.x) | Development only; no production security support guarantee |
-| Future production releases | Policy will be updated when a supported release is published |
+| Final hackathon / demonstration release | Security fixes and regression reports accepted for controlled demonstration; no production support guarantee |
 
-**Do not use the current starter to process private, confidential, or regulated documents.** Upload authorization, file isolation, threat controls, and production hardening are not yet implemented.
+## Implemented Security Controls
 
-## Reporting a vulnerability
+- Django session authentication with CSRF protection, session rotation, idle expiry, and login failure throttling.
+- HTTP Basic authentication disabled by default; any development opt-in requires `DEBUG=true`.
+- Owner-scoped document, invoice, PDF evidence, classification, review and processing APIs.
+- Private file storage without a public uploaded-document URL.
+- Production configuration checks for secure cookies, HTTPS settings and deployment secrets.
+- Backup verification through SHA-256 checksums and SQLite integrity checks; restore requires explicit confirmation and refuses overwrite of existing data.
+- Automated authentication, authorization, backup and release checks.
 
-Please report security vulnerabilities **privately**, not in public issues or pull requests.
+## Reporting a Vulnerability
 
-1. Open the repository's **Security** tab and use **Report a vulnerability** if private vulnerability reporting has been enabled.
-2. If that option is unavailable, contact the repository maintainer through an established private channel and request a secure reporting method. Do not post exploit details publicly.
-3. Include an affected version or commit, impact, reproduction steps, and suggested mitigations if available. Remove real credentials and sensitive customer content.
+**Do not post exploit details or confidential documents in public GitHub issues.**
 
-No private reporting email address has been designated yet; none is claimed in this policy.
+1. Use the repository's **Security → Report a vulnerability** option if private reporting is enabled.
+2. Otherwise request a private contact channel from a project maintainer without publishing vulnerability details.
+3. Supply the affected revision, impact, reproducible steps, and suggested mitigation, without real credentials or customer data.
 
-## Scope and response
+No dedicated security reporting email or response-time guarantee is currently published.
 
-Maintainers will triage credible reports when received; specific response or remediation deadlines are **not promised** at this stage. Please allow time for coordinated disclosure and a fix before public publication.
+## Production and Privacy Limitations
 
-## Security requirements for future releases
+- Use HTTPS, a production application server, a unique secret key, restricted allowed hosts, and a correctly configured trusted reverse proxy before external deployment.
+- Add edge/network-level rate limiting, monitoring, and deployment-specific security assessments; application throttling alone does not prevent distributed attacks.
+- Administrator MFA and external penetration testing are not included in the current release.
+- Do not publish `.env`, SQLite databases, private media, backup ZIPs, or sensitive document excerpts.
+- Backup archives **are not encrypted** by the utility; encrypt and restrict access before off-site storage.
+- Classification uses explainable heuristic rules. Synthetic evaluation and owner feedback do not establish independent real-world accuracy; financial extraction requires human verification.
+- Only upload synthetic or properly authorized documents to demonstration environments. Avoid regulated or confidential production data until required controls and approval are completed.
 
-Planned controls include:
-
-- Enforced authentication and document-level authorization.
-- Server-side file type/size validation and safe storage.
-- Separation of sensitive documents and prevention of unauthorized cross-user retrieval.
-- Safe handling of environment secrets and third-party API credentials.
-- Audit logging and regression tests for access controls.
-- Evidence-linked answers that avoid returning information from inaccessible documents.
-
-These are goals, **not assertions that the current version is secure**.
+Security regression instructions are available in [the testing evidence index](handoff/04_TESTING_EVIDENCE_INDEX.md) and [the deployment guide](handoff/02_WINDOWS_DEPLOYMENT_GUIDE.md).

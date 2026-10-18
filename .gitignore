@@ -24,5 +24,6 @@ backups/
 release-reports/
 *.log
 
-# Not necessary files
-Phases/
+# Private development-phase guides (not published)
+phases/
+handoff/
