@@ -76,7 +76,7 @@ test('owner-scoped invoice line item API uses the same authenticated client', as
     globalThis.fetch = async (url, opts) => {
       assert.equal(url, '/api/invoices/44/line-items/');
       assert.equal(opts.headers.Authorization, undefined);
-      assert.equal(opts.credentials, 'same-origin');
+      assert.equal(opts.credentials, 'include');
       return { ok: true, status: 200, json: async () => ({ count: 1, results: [{ description: 'Ceramic Tile', page_number: 2, validation_status: 'matched' }] }) };
     };
     const result = await api('/invoices/44/line-items/', { username: 'owner', mode: 'session' });

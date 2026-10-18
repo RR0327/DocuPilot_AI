@@ -17,6 +17,6 @@ test('session requests do not send Basic credentials and include CSRF on writes'
     await api('/documents/', {username:'alice',mode:'session'}, {method:'POST',body:{hello:'world'}});
     assert.equal(request.options.headers['X-CSRFToken'],'abc123');
     assert.equal(request.options.headers.Authorization, undefined);
-    assert.equal(request.options.credentials,'same-origin');
+    assert.equal(request.options.credentials,'include');
   } finally {globalThis.fetch = original;globalThis.document = originalDoc;}
 });

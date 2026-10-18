@@ -6,6 +6,12 @@ export function basicHeader(username, password) {
   return `Basic ${btoa(binary)}`;
 }
 
+const API_BASE_URL = (typeof import.meta.env !== 'undefined' ? import.meta.env.VITE_API_URL || '' : '').replace(/\/+$/, '');
+
+function apiUrl(path) {
+  return `${API_BASE_URL}/api${path}`;
+}
+
 export function queryString(filters = {}) {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(filters)) {
@@ -22,7 +28,7 @@ export async function api(path, auth, options = {}) {
   if (body !== undefined && !(body instanceof FormData)) headers['Content-Type'] = 'application/json';
   let response;
   try {
-    response = await fetch(`/api${path}`, { method, headers, body: body instanceof FormData ? body : body === undefined ? undefined : JSON.stringify(body), signal, credentials: "same-origin", cache: 'no-store' });
+    response = await fetch(apiUrl(path), { method, headers, body: body instanceof FormData ? body : body === undefined ? undefined : JSON.stringify(body), signal, credentials: "include", cache: 'no-store' });
   } catch (error) {
     if (error.name === 'AbortError') throw error;
     throw new Error('Cannot connect to the backend. Start Django on port 8000.');
@@ -51,7 +57,8 @@ export async function allDocuments(auth, request = api) {
     results.push(...documentList(page));
     if (!page || Array.isArray(page) || !page.next) break;
     const url = new URL(page.next, 'http://localhost');
-    if (url.origin !== 'http://localhost' && url.hostname !== '127.0.0.1' && url.hostname !== 'localhost') {
+    const expectedOrigin = new URL(API_BASE_URL || 'http://localhost').origin;
+    if (url.origin !== expectedOrigin && !(API_BASE_URL === '' && (url.hostname === '127.0.0.1' || url.hostname === 'localhost'))) {
       throw new Error('Unexpected pagination destination');
     }
     if (!url.pathname.startsWith('/api/documents/')) throw new Error('Unexpected document pagination path');
@@ -100,7 +107,7 @@ export function csrfCookie(cookieString = typeof document === 'undefined' ? '' :
 async function sessionRequest(path, method = 'GET', payload) {
   const headers = { ...(payload ? { 'Content-Type': 'application/json' } : {}) };
   if (method !== 'GET') headers['X-CSRFToken'] = csrfCookie();
-  const response = await fetch(`/api/auth/${path}/`, { method, headers, credentials: 'same-origin', cache: 'no-store', body: payload ? JSON.stringify(payload) : undefined });
+  const response = await fetch(apiUrl(`/auth/${path}/`), { method, headers, credentials: 'include', cache: 'no-store', body: payload ? JSON.stringify(payload) : undefined });
   let data; try { data = await response.json(); } catch { data = {}; }
   if (!response.ok) {
     const error = new Error(data.detail || `Authentication request failed (${response.status})`);

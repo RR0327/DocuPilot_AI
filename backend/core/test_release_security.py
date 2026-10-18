@@ -25,7 +25,9 @@ class ReleaseSecurityTests(TestCase):
     def test_no_public_private_media_route(self):
         from django.conf import settings
         self.assertFalse(getattr(settings, "MEDIA_URL", None))
-        self.assertNotIn("corsheaders.middleware.CorsMiddleware", settings.MIDDLEWARE)
+        self.assertIn("corsheaders.middleware.CorsMiddleware", settings.MIDDLEWARE)
+        self.assertTrue(settings.CORS_ALLOW_CREDENTIALS)
+        self.assertNotIn("*", settings.CORS_ALLOWED_ORIGINS)
 
     def test_development_gate_reports_warning(self):
         output = StringIO()

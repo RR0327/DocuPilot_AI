@@ -95,6 +95,38 @@ python -m unittest discover -s scripts -p "test_*.py" -v
 
 Playwright is configured for an installed Google Chrome browser. The synthetic evaluation fixtures are not independent evidence of real-world classification accuracy. Full public deployment requires separate security and infrastructure acceptance.
 
+## Deployment
+
+The backend can be deployed to Render and the frontend to Vercel from the
+repository root. Create the Render web service from
+[render.yaml](render.yaml), or set these backend environment variables
+manually:
+
+- `DJANGO_DEBUG=false`
+- `DJANGO_SECRET_KEY` to a unique random value of at least 50 characters
+- `DJANGO_ALLOWED_HOSTS` to the Render hostname, without `https://`
+- `DATABASE_URL` to the Render PostgreSQL connection string. In Render, use
+  **Add from database** to link the database instead of copying the password
+  into source control.
+- `DOCUPILOT_FRONTEND_ORIGINS` to the exact Vercel origin, for example
+  `https://your-app.vercel.app`
+- `DJANGO_CSRF_TRUSTED_ORIGINS` to the same exact Vercel origin
+- `DJANGO_TRUST_PROXY_HTTPS=true`
+- `DJANGO_SESSION_COOKIE_SAMESITE=None`
+- `DJANGO_CSRF_COOKIE_SAMESITE=None`
+
+Set `VITE_API_URL` in the Vercel project to the Render backend origin, for
+example `https://docupilot-api.onrender.com`, then redeploy the frontend.
+The frontend sends credentialed requests to the backend and the backend
+allows only the configured Vercel origin. Do not use a trailing slash in
+`VITE_API_URL`.
+
+Render's default filesystem is ephemeral. The PostgreSQL database persists
+structured data, but uploaded files in `backend/private_media/` do not survive
+service restarts or redeploys without a persistent disk or external object
+storage. Configure durable private file storage before relying on uploads in
+production.
+
 ## Backup and Recovery
 
 ```powershell
