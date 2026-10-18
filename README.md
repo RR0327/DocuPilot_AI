@@ -181,3 +181,8 @@ See [Phase 3 Step 2 testing and acceptance](PHASE3_STEP2_TESTING.md). Existing p
 DocuPilot AI can now run PDF/OCR extraction in a Celery worker, with Redis as broker and an owner-scoped SQLite3 `ProcessingJob` status record. This is **optional**; the default synchronous `POST /api/documents/{id}/extract/` endpoint continues working when Celery/Redis are absent. Enable with `DOCUPILOT_ASYNC_ENABLED=true` after installing `backend/requirements-async.txt` and running a local Redis broker and worker (`celery -A config worker --pool=solo --concurrency=1 --loglevel=info` on Windows).
 
 The Document workspace offers **Background extract**, job status updates and a retry action for failed jobs. Jobs have queued/running/succeeded/failed states, not percentage-complete telemetry. For exact commands, expected statuses, regression checks and security limitations see [Phase 3 Step 3 testing](PHASE3_STEP3_TESTING.md). No current features require external PostgreSQL or a paid AI API.
+
+
+## Phase 3 Step 4 — Job recovery and observability
+
+Optional background extraction now includes atomic job claiming, bounded queued-job recovery, operator-only stale running-job remediation, and an authenticated `GET /api/processing-jobs/overview/` summary. The management command defaults to **dry-run**, and `--apply` must only be used after checking the Redis worker. No automatic requeue of running jobs is performed. See [Phase 3 Step 4 testing](PHASE3_STEP4_TESTING.md). SQLite3 remains the database; all existing review, analytics, OCR, retrieval and private PDF features are preserved.

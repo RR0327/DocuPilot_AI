@@ -15,13 +15,14 @@ except ImportError:
 
 def perform_job(job_id):
     """Run one queued job; duplicate task deliveries cannot run extraction twice."""
-    with transaction.atomic():
-        job = ProcessingJob.objects.select_for_update().select_related("document").get(pk=job_id)
-        if job.state != ProcessingJob.State.QUEUED:
-            return {"state": job.state}
-        job.state = ProcessingJob.State.RUNNING
-        job.started_at = timezone.now()
-        job.save(update_fields=["state", "started_at"])
+    # Atomic state claim prevents duplicate Redis delivery executing twice,
+    # including on SQLite where SELECT FOR UPDATE has limited semantics.
+    claimed = ProcessingJob.objects.filter(pk=job_id, state=ProcessingJob.State.QUEUED).update(
+        state=ProcessingJob.State.RUNNING, started_at=timezone.now()
+    )
+    if not claimed:
+        return {"state": ProcessingJob.objects.get(pk=job_id).state}
+    job = ProcessingJob.objects.get(pk=job_id)
     try:
         from .extraction import extract_document
         result = extract_document(Document.objects.get(pk=job.document_id))

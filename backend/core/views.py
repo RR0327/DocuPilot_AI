@@ -306,3 +306,17 @@ def retry_processing_job(request, job_id):
     response = Response(job_payload(job), status=202)
     response["Cache-Control"] = "no-store"
     return response
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def processing_overview(request):
+    """User-scoped job counters. Never disclose other users' job metadata."""
+    from django.db.models import Count
+    jobs = ProcessingJob.objects.filter(document__owner=request.user)
+    counts = {state: 0 for state in ("queued", "running", "succeeded", "failed")}
+    for row in jobs.values("state").annotate(total=Count("id")):
+        counts[row["state"]] = row["total"]
+    response = Response({"counts": counts, "active": counts["queued"] + counts["running"]})
+    response["Cache-Control"] = "no-store"
+    return response

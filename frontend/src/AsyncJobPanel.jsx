@@ -32,7 +32,8 @@ export default function AsyncJobPanel({ job, auth, onUpdate, onComplete, onClose
   return <section className="panel" aria-live="polite">
     <div className="panel-heading"><h3>Background extraction — {job.document_title}</h3><button className="secondary" onClick={onClose}>Close</button></div>
     <p role="status">Status: <strong>{job.state}</strong> · Attempt {job.attempt}{job.state === 'running' ? ' · Processing document…' : ''}</p>
-    {job.state === 'queued' && <p className="muted">Waiting for the Redis worker. If this persists, check the worker terminal.</p>}
+    {job.state === 'queued' && <p className="muted">Waiting for the Redis worker. If this persists, check the worker terminal or ask an administrator to inspect stale jobs.</p>}
+    {(job.recovery_count || 0) > 0 && <p className="muted">Queue recovery attempts: {job.recovery_count}</p>}
     {job.state === 'succeeded' && <p>Completed: {job.page_count} page(s), {job.character_count} characters.</p>}
     {job.state === 'failed' && <><p role="alert">{job.error_message || 'Extraction failed'}</p><button className="secondary" disabled={retrying} onClick={retry}>{retrying ? 'Retrying…' : 'Retry failed job'}</button></>}
     {error && <p role="alert">Unable to refresh job status: {error} <button className="secondary" onClick={() => onUpdate({ ...job })}>Try again</button></p>}
