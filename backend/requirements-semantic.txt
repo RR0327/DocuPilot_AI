@@ -1,0 +1,3 @@
+# Install only when semantic/hybrid retrieval is required (large optional CPU dependencies).
+-r requirements.txt
+sentence-transformers>=3.4,<6
