@@ -10,6 +10,7 @@ from .extraction import ExtractionError, extract_document
 from .invoice_extraction import InvoiceError, extract_invoice
 from .models import Document, ExtractedRecord, QuestionAnswer, InvoicePaymentState
 from .search import MAX_QUERY_LENGTH, retrieve, answer_from_evidence
+from .semantic import SemanticUnavailable
 from .serializers import DocumentSerializer, DocumentPageSerializer, ExtractedRecordSerializer, UploadDocumentSerializer
 
 
@@ -96,16 +97,22 @@ def ask(request):
         allowed_count = Document.objects.filter(owner=request.user, pk__in=set(document_ids)).count()
         if allowed_count != len(set(document_ids)):
             return Response({"detail": "One or more documents are unavailable."}, status=404)
-    evidence = retrieve(request.user, question.strip(), document_ids=document_ids)
+    mode = request.data.get("mode", "keyword")
+    if mode not in ("keyword", "semantic", "hybrid"):
+        return Response({"mode": ["Choose keyword, semantic or hybrid."]}, status=400)
+    try:
+        evidence = retrieve(request.user, question.strip(), document_ids=document_ids, mode=mode)
+    except SemanticUnavailable as exc:
+        return Response({"detail": str(exc), "mode": mode}, status=503)
     sources = [{"document_id": hit.document_id, "document_title": hit.document_title,
                 "page_number": hit.page_number, "excerpt": hit.excerpt,
-                "chunk_id": hit.chunk_id, "score": hit.score} for hit in evidence]
+                "chunk_id": hit.chunk_id, "score": hit.score, "retrieval_method": hit.retrieval_method} for hit in evidence]
     answer = answer_from_evidence(evidence)
     entry = QuestionAnswer.objects.create(owner=request.user, question=question.strip(),
                                           answer=answer, source_references=sources)
     return Response({"id": entry.pk, "question": entry.question, "answer": answer,
                      "source_references": sources, "has_evidence": bool(evidence),
-                     "answer_type": "extractive" if evidence else "insufficient_evidence"}, status=200)
+                     "answer_type": "extractive" if evidence else "insufficient_evidence", "retrieval_mode": mode}, status=200)
 
 
 @api_view(["GET"])

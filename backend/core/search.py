@@ -67,9 +67,10 @@ class Evidence:
     excerpt: str
     chunk_id: int
     score: float
+    retrieval_method: str = "keyword"
 
 
-def retrieve(owner, query, document_ids=None, limit=5):
+def retrieve_keyword(owner, query, document_ids=None, limit=5):
     terms = Counter(tokens(query))
     if not terms:
         return []
@@ -113,3 +114,11 @@ def answer_from_evidence(evidence):
         return 'Insufficient evidence found in your indexed documents.'
     # Direct quotation: do not paraphrase or claim unsupported inferences.
     return evidence[0].excerpt[:700]
+
+
+# The old retrieval entry point remains available for existing callers.
+def retrieve(owner, query, document_ids=None, limit=5, mode="keyword"):
+    if mode == "keyword":
+        return retrieve_keyword(owner, query, document_ids=document_ids, limit=limit)
+    from .semantic import retrieve_hybrid
+    return retrieve_hybrid(owner, query, document_ids=document_ids, limit=limit, mode=mode)

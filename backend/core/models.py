@@ -89,3 +89,13 @@ class InvoicePaymentState(models.Model):
     record = models.OneToOneField(ExtractedRecord, on_delete=models.CASCADE, related_name="payment_state")
     status = models.CharField(max_length=12, choices=State.choices, default=State.UNKNOWN)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class ChunkEmbedding(models.Model):
+    """Locally computed numeric vectors; cascade deletion on chunk rebuild."""
+    chunk = models.ForeignKey(DocumentChunk, on_delete=models.CASCADE, related_name="embeddings")
+    model_name = models.CharField(max_length=200)
+    vector = models.JSONField()
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["chunk", "model_name"], name="unique_chunk_embedding_model")]
