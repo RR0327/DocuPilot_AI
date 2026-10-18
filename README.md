@@ -108,7 +108,23 @@ Restore is a **dry run by default**. A real restore requires stopping Django/Cel
 
 ## Project Documentation
 
-- [Architecture and System Design](handoff/ARCHITECTURE_AND_SYSTEM_DESIGN.md)
+### 1. System Architecture
+
+<p align="center">
+  <img src="handoff/Architecture.png" alt="System Architecture" width="800">
+</p>
+<p align="center"><em>Figure 1: High-level System Architecture</em></p>
+
+### 2. System Design
+
+<p align="center">
+  <img src="handoff/System-design.png" alt="System Design" width="800">
+</p>
+<p align="center"><em>Figure 2: Detailed System Design</em></p>
+
+### 3. Detailed Documentation
+
+> For in-depth explanation, see: [Architecture and System Design](handoff/ARCHITECTURE_AND_SYSTEM_DESIGN.md)
 
 ## Contributing
 
