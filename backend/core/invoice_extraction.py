@@ -110,6 +110,8 @@ def parse_invoice_pages(pages):
     if values['subtotal'] and values['tax'] and values['total']:
         if Decimal(values['subtotal']) + Decimal(values['tax']) != Decimal(values['total']):
             warnings.append('Subtotal plus tax differs from total; manual review required')
+    if values['invoice_date'] and values['due_date'] and values['due_date'] < values['invoice_date']:
+        warnings.append('Due date precedes invoice date; verify source dates')
     missing = [field for field in FIELDS if values[field] is None]
     return {'fields': values, 'source_references': evidence, 'missing_fields': missing, 'warnings': warnings, 'extraction_method': 'rule_based_v1'}
 
@@ -124,6 +126,13 @@ def extract_invoice(document):
     if not any(data['fields'][key] for key in ('invoice_number', 'supplier', 'total', 'invoice_date')):
         raise InvoiceError('No recognizable invoice fields found; record not saved')
     line_items, line_warnings = parse_line_items(pages)
+    # This is a diagnostic, not an auto-correction: invoices may include discounts,
+    # service fees or unrecognized table rows. Preserve the source amounts.
+    if line_items and data['fields'].get('subtotal') is not None:
+        declared = Decimal(data['fields']['subtotal'])
+        reported = sum((Decimal(row['line_total']) for row in line_items), Decimal('0'))
+        if abs(declared - reported) > Decimal('0.01'):
+            data['warnings'].append('Recognized line totals differ from subtotal; check discounts or omitted rows')
     data['line_item_count'] = len(line_items)
     data['line_item_warnings'] = line_warnings
     if line_warnings:
