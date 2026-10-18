@@ -9,7 +9,8 @@ from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
 from django.db import transaction
-from .models import Document, ExtractedRecord
+from .models import Document, ExtractedRecord, InvoiceLineItem
+from .line_items import parse_line_items
 
 
 class InvoiceError(Exception):
@@ -122,10 +123,16 @@ def extract_invoice(document):
     data = parse_invoice_pages(pages)
     if not any(data['fields'][key] for key in ('invoice_number', 'supplier', 'total', 'invoice_date')):
         raise InvoiceError('No recognizable invoice fields found; record not saved')
+    line_items, line_warnings = parse_line_items(pages)
+    data['line_item_count'] = len(line_items)
+    data['line_item_warnings'] = line_warnings
+    if line_warnings:
+        data['warnings'].extend(line_warnings)
     # Always unreviewed: syntactically valid extracted values are not independently verified.
     with transaction.atomic():
         record = ExtractedRecord.objects.create(
             document=document, record_type='invoice', extracted_data=data,
             validation_status=ExtractedRecord.ValidationStatus.UNREVIEWED,
         )
+        InvoiceLineItem.objects.bulk_create([InvoiceLineItem(record=record, **row) for row in line_items])
     return record

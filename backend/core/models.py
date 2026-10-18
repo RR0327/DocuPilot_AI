@@ -99,3 +99,21 @@ class ChunkEmbedding(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["chunk", "model_name"], name="unique_chunk_embedding_model")]
+
+
+class InvoiceLineItem(models.Model):
+    """Conservatively extracted row with page evidence; not a verified accounting entry."""
+    record = models.ForeignKey(ExtractedRecord, on_delete=models.CASCADE, related_name="line_items")
+    line_number = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    description = models.CharField(max_length=255)
+    quantity = models.DecimalField(max_digits=14, decimal_places=3)
+    unit_price = models.DecimalField(max_digits=16, decimal_places=2)
+    line_total = models.DecimalField(max_digits=16, decimal_places=2)
+    calculated_total = models.DecimalField(max_digits=16, decimal_places=2)
+    validation_status = models.CharField(max_length=12, choices=[("matched", "Matched"), ("mismatch", "Mismatch")])
+    page_number = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    source_excerpt = models.CharField(max_length=500)
+
+    class Meta:
+        ordering = ["record_id", "line_number"]
+        constraints = [models.UniqueConstraint(fields=["record", "line_number"], name="unique_invoice_line_number")]
