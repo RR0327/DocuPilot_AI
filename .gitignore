@@ -23,3 +23,6 @@ backups/
 *.backup.sqlite3
 release-reports/
 *.log
+
+# Not necessary files
+Phases/
