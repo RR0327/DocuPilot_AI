@@ -169,3 +169,9 @@ A new **Human review** React workspace lists the signed-in owner's extracted inv
 - `POST /api/reviews/{record_id}/` — `{ "action": "approve", "corrections": {"total": "250.00"}, "note": "Checked source" }`, or `reject` with a reason, or `reopen`.
 
 See [Phase 3 Step 1 testing instructions](PHASE3_STEP1_TESTING.md). SQLite3 remains the sole database. The repository's [MIT License](LICENSE), [Contributing](CONTRIBUTING.md) and [Security](SECURITY.md) files remain unchanged.
+
+## Phase 3 Step 2 — Supplier invoice analytics
+
+Authenticated `GET /api/invoices/analytics/` supports `currency=BDT|USD|EUR|GBP`, `year=YYYY`, and `limit=1..50`. The response includes currency-specific invoice-value totals, dated monthly trends, top suppliers, excluded-record reasons, and source-value basis metadata. The **Supplier analytics** React navigation item displays Recharts line and bar charts with a currency selector. Approved human-review corrections are used; rejected invoice records are excluded. Values are based on invoice dates, **not confirmed cash payments**. No database migration is necessary.
+
+See [Phase 3 Step 2 testing and acceptance](PHASE3_STEP2_TESTING.md). Existing project links: [License](LICENSE) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md).

@@ -157,6 +157,32 @@ def invoices(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+def invoice_analytics(request):
+    """Aggregate only the current user's invoice records, with currency isolation."""
+    from .supplier_analytics import analytics_for_user
+    allowed = {"currency", "year", "limit"}
+    if set(request.query_params.keys()) - allowed:
+        return Response({"detail": "Unsupported analytics filter."}, status=400)
+    try:
+        raw_year = request.query_params.get("year")
+        raw_limit = request.query_params.get("limit", "10")
+        if raw_year is not None and (not raw_year.isdecimal() or len(raw_year) != 4):
+            raise ValueError("year must be a four-digit year")
+        if not raw_limit.isdecimal():
+            raise ValueError("limit must be a positive integer")
+        data = analytics_for_user(
+            request.user, currency=request.query_params.get("currency") or None,
+            year=int(raw_year) if raw_year is not None else None,
+            limit=int(raw_limit))
+    except ValueError as exc:
+        return Response({"detail": str(exc)}, status=400)
+    response = Response(data)
+    response["Cache-Control"] = "no-store"
+    return response
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def invoice_dashboard(request):
     return Response(dashboard(request.user))
 
