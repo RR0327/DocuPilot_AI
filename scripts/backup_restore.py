@@ -97,20 +97,15 @@ def verify_archive(archive):
                 raise ValueError('Unsafe archive path: ' + key)
             if digest(z.read(key)) != expected:
                 raise ValueError('Checksum mismatch: ' + key)
-        temp_path = None
-        try:
-            with tempfile.NamedTemporaryFile(suffix='.sqlite3', delete=False) as temp:
-                temp_path = Path(temp.name)
-                temp.write(z.read('database/db.sqlite3'))
-            conn = sqlite3.connect(f'file:{temp_path.as_posix()}?mode=ro', uri=True)
+        with tempfile.NamedTemporaryFile(suffix='.sqlite3') as temp:
+            temp.write(z.read('database/db.sqlite3'))
+            temp.flush()
+            conn = sqlite3.connect(f'file:{temp.name}?mode=ro', uri=True)
             try:
                 if conn.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
                     raise ValueError('Invalid SQLite3 snapshot')
             finally:
                 conn.close()
-        finally:
-            if temp_path:
-                temp_path.unlink(missing_ok=True)
     return len(files)
 
 def restore(archive, *, apply=False):

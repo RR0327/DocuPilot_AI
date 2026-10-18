@@ -1,7 +1,7 @@
 # DocuPilot AI
 
 **Intelligent Document Processing & Knowledge Assistant**  
-**Copyright © 2026 Tech_Innovators** · **Phase 2 Step 2 — SQLite Hybrid Retrieval**
+**Copyright © 2026 Tech_Innovators** · **Phase 5 Step 3 — Final Submission Handoff**
 
 [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Contributing](https://img.shields.io/badge/Contributing-Guidelines-green.svg)](CONTRIBUTING.md)
@@ -16,13 +16,13 @@ DocuPilot AI is a Django + React document intelligence application. Authorized u
 ### Current MVP capabilities
 
 - Django REST Framework backend and React + Vite + Tailwind frontend.
-- React sign-in using existing Django username/password and HTTP Basic authentication. **Credentials are held in React memory only** and cleared on sign-out or reload. No persistent tokens or passwords are stored.
+- React sign-in using CSRF-protected Django sessions; HTTP Basic authentication is disabled except under an explicit development-only opt-in.
 - Private owner-isolated PDF/TXT upload, listing, deletion, page extraction, invoice field extraction.
 - Document chunk indexing and SQLite-compatible keyword retrieval; extractive answers with supporting document/page excerpts.
 - Invoice dashboard with owner-set payment status (`unknown`, `pending`, `paid`, `disputed`), due-date filters, currency-separated pending totals, and CSV export.
 - Error, loading and empty states; mobile-responsive frontend; frontend API regression tests and backend Django tests.
 
-**Limitations:** This is a local-development MVP, not a production-secure deployment. HTTP Basic credentials are transmitted in an Authorization header on every request; **never expose this service without TLS/HTTPS and a reviewed authentication model**. Scanned PDFs and PNG/JPEG can use optional Tesseract OCR. Q&A is extractive, not an LLM answer. Financial fields require human verification. The document listing currently shows the first page (20 documents) from Django's paginated API. The React invoice dashboard uses backend APIs rather than direct DB access.
+**Limitations:** This is a locally demonstrated system, not an independently approved public-production deployment. Session authentication and login throttling are implemented, but real-world security assessment, TLS deployment, administrator MFA decisions and monitoring remain site-specific prerequisites. Scanned PDFs and PNG/JPEG can use optional Tesseract OCR. Q&A is extractive, not an LLM answer. Financial fields require human verification. The document listing currently shows the first page (20 documents) from Django's paginated API. The React invoice dashboard uses backend APIs rather than direct DB access.
 
 ## Technology
 
@@ -33,7 +33,7 @@ DocuPilot AI is a Django + React document intelligence application. Authorized u
 | Database | SQLite3 |
 | Extraction | PyMuPDF + deterministic Python rules |
 | Search | SQLite-compatible keyword chunks |
-| Auth | DRF Basic authentication in the development frontend; session authentication supported by backend |
+| Auth | Django session authentication, CSRF, rate limiting and idle expiry; Basic disabled by default |
 
 ## Windows 11 quick start
 
@@ -250,3 +250,11 @@ The browser now signs in using a CSRF-protected Django session and sends HttpOnl
 ## Phase 5 Step 3 — Security acceptance and release drills
 
 Step 3 uses the Phase 5 Step 2 session security baseline and incorporates the five user-supplied source replacements. Run `python manage.py release_acceptance` from `backend/` for a read-only JSON preflight; use `--require-production` only against actual production configuration. Follow [PHASE5_STEP3_TESTING.md](PHASE5_STEP3_TESTING.md) for Windows 11 tests, live E2E journey, Chrome-channel Playwright requirements, backup/restore drills and release limitations. Preserve the [MIT license](LICENSE), [contribution policy](CONTRIBUTING.md) and [security policy](SECURITY.md).
+
+
+## Final submission and release handoff
+
+This archive includes a new [handoff documentation suite](handoff/00_SUBMISSION_OVERVIEW.md):
+[Architecture and system design](handoff/01_ARCHITECTURE_AND_SYSTEM_DESIGN.md) · [Windows setup/deployment](handoff/02_WINDOWS_DEPLOYMENT_GUIDE.md) · [Demo script](handoff/03_DEMONSTRATION_SCRIPT.md) · [Testing evidence index](handoff/04_TESTING_EVIDENCE_INDEX.md) · [Security and limitations](handoff/05_SECURITY_PRIVACY_AND_LIMITATIONS.md) · [Backup and recovery](handoff/06_BACKUP_AND_RECOVERY_GUIDE.md) · [Final release checklist](handoff/07_FINAL_RELEASE_CHECKLIST.md).
+
+This release incorporates the user's updated `backend/core/test_release_acceptance.py` (development `DEBUG=True` override for the local-report test), while retaining all other Phase 5 Step 3 functionality. Local demo acceptance was reported as 20/20 by the user; public production **is not approved** without separate checks.
