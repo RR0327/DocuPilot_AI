@@ -151,6 +151,18 @@ class DocumentViewSet(viewsets.ModelViewSet):
         })
 
 
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def classification_reliability(request):
+    """Owner-scoped aggregate triage; no document content or identifiers."""
+    from .reliability import reliability_report
+    response = Response(reliability_report(Document.objects.filter(owner=request.user)))
+    response["Cache-Control"] = "no-store"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def classification_feedback_quality(request):

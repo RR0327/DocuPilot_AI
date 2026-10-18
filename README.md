@@ -227,3 +227,8 @@ Classification decisions are now tracked through an append-only `ClassificationF
 - The APIs require authenticated users and set `Cache-Control: no-store`; the database remains SQLite3, and no migrations are introduced.
 
 See [Phase 4 Step 5 testing](PHASE4_STEP5_TESTING.md) for acceptance instructions.
+
+
+## Phase 4 Step 6 — reliability and adjudication
+
+See [Phase 4 Step 6 testing guide](PHASE4_STEP6_TESTING.md). An independent two-reviewer and adjudicator dataset can be evaluated offline with `python manage.py evaluate_adjudicated_classification --dataset evaluation/adjudicated_private.json --output adjudicated_report.json`. The template under `backend/evaluation/adjudicated_labels_TEMPLATE.json` is **not** real ground truth. The owner-only `/api/classification/reliability/` endpoint and Reliability React tab show operational errors, not accuracy. No migration is required.

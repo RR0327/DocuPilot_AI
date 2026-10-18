@@ -1,0 +1,25 @@
+{
+  "dataset_type": "independently_adjudicated_documents",
+  "provenance": {
+    "source_description": "REPLACE with exact source sampling description",
+    "license_or_consent": "REPLACE with document license/consent details",
+    "reviewer_protocol": "REPLACE with independent labeling instructions and blinding method",
+    "adjudicator_protocol": "REPLACE with resolution policy",
+    "collection_date": "REPLACE with YYYY-MM-DD"
+  },
+  "cases": [
+    {
+      "id": "example-001-REPLACE",
+      "reviewer_a": "invoice",
+      "reviewer_b": "invoice",
+      "adjudicated_label": "invoice",
+      "adjudication_reason": "",
+      "pages": [
+        {
+          "page_number": 1,
+          "text": "Invoice No: INV-101 Invoice Date: 2026-10-01 Subtotal 100.00"
+        }
+      ]
+    }
+  ]
+}
