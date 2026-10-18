@@ -113,6 +113,10 @@ export async function signIn(username, password) {
   await prepareSession();
   return sessionRequest('login', 'POST', {username, password});
 }
+export async function register(username, password) {
+  await prepareSession();
+  return sessionRequest('register', 'POST', {username, password});
+}
 export async function currentSession() {
   await prepareSession();
   return sessionRequest('me');

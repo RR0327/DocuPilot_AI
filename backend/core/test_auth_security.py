@@ -59,3 +59,28 @@ class SessionSecurityTests(TestCase):
         session['docupilot_last_seen'] = int(time.time()) - 180
         session.save()
         self.assertIn(c.get(f'/api/documents/{self.document.id}/').status_code,(401,403))
+
+    def test_registration_validation_and_login(self):
+        c = self._csrf_client()
+        token = c.cookies['csrftoken'].value
+        # CSRF missing
+        denied = c.post('/api/auth/register/', data=json.dumps({'username':'newuser','password':'SecurePassword2026!'}), content_type='application/json')
+        self.assertEqual(denied.status_code, 403)
+
+        # Password too short (<12 chars)
+        short = c.post('/api/auth/register/', data=json.dumps({'username':'newuser','password':'short'}), content_type='application/json', HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(short.status_code, 400)
+
+        # Successful registration
+        payload = json.dumps({'username':'newuser','password':'SecurePassword2026!'})
+        res = c.post('/api/auth/register/', data=payload, content_type='application/json', HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(res.status_code, 201)
+        self.assertTrue(res.json().get('registered'))
+
+        # Duplicate registration rejected
+        dup = c.post('/api/auth/register/', data=payload, content_type='application/json', HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(dup.status_code, 400)
+
+        # Registered user can now log in
+        login_res = self._login(c, username='newuser', password='SecurePassword2026!')
+        self.assertEqual(login_res.status_code, 200)

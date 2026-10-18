@@ -12,6 +12,13 @@ test.beforeEach(async ({ page, context }) => {
     const req=route.request(), url=new URL(req.url()), path=url.pathname;
     const json=(data,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
     if (path === '/api/auth/csrf/') return json({csrf_ready: true});
+    if (path === '/api/auth/register/' && req.method() === 'POST') {
+      const payload = req.postDataJSON() || {};
+      if (payload.username && payload.password) {
+        return json({username: payload.username, registered: true, detail: 'Account registered successfully.'}, 201);
+      }
+      return json({detail: 'Invalid registration request.'}, 400);
+    }
     if (path === '/api/auth/login/' && req.method() === 'POST') {
       const payload = req.postDataJSON() || {};
       if (payload.username === 'demo' && payload.password === 'secret') {
@@ -87,4 +94,38 @@ test('unauthenticated API request never reveals private document metadata', asyn
   });
   expect(result.status).toBe(401);
   expect(JSON.stringify(result.payload)).not.toContain('Refund Policy');
+});
+
+test('3-page workflow: home -> register -> login -> dashboard and logout -> home', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Turn documents into decisions.' })).toBeVisible();
+
+  // 1. Home page -> Registration
+  await page.getByRole('button', { name: 'Register' }).first().click();
+  await expect(page.getByRole('heading', { name: 'Create your workspace account' })).toBeVisible();
+
+  // Fill registration form
+  await page.getByLabel('Username').fill('newanalyst');
+  await page.locator('input[placeholder="Minimum 12 characters"]').fill('ValidPassword2026!');
+  await page.locator('input[placeholder="Repeat password"]').fill('ValidPassword2026!');
+  await page.getByRole('button', { name: 'Register & Create Account' }).click();
+
+  // 2. Transitions to Login
+  await expect(page.getByRole('heading', { name: 'Sign in to DocuPilot AI' })).toBeVisible();
+
+  // Back to home test
+  await page.getByRole('button', { name: 'Return to Home' }).click();
+  await expect(page.getByRole('heading', { name: 'Turn documents into decisions.' })).toBeVisible();
+
+  // 3. Home page -> Login -> Dashboard
+  await page.getByRole('button', { name: 'Login' }).first().click();
+  await expect(page.getByRole('heading', { name: 'Sign in to DocuPilot AI' })).toBeVisible();
+  await page.getByLabel('Username').fill('demo');
+  await page.getByLabel('Password').fill('secret');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByText('Refund Policy').first()).toBeVisible();
+
+  // 4. Dashboard -> Logout -> Home
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await expect(page.getByRole('heading', { name: 'Turn documents into decisions.' })).toBeVisible();
 });

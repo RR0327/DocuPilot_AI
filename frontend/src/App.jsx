@@ -1,4 +1,4 @@
-import { signIn, signOut, currentSession } from './api.js';
+import { signIn, signOut, currentSession, register } from './api.js';
 import ReliabilityDashboard from './ReliabilityDashboard.jsx';
 import ClassificationReview from './ClassificationReview.jsx';
 import ClassificationPanel from './ClassificationPanel.jsx';
@@ -25,10 +25,17 @@ function authError(error) { return error instanceof Error ? error.message : Stri
 
 export default function App() {
   const [credentials, setCredentials] = useState(null);
+  const [publicPage, setPublicPage] = useState('home');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginBusy, setLoginBusy] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [regUsername, setRegUsername] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regConfirm, setRegConfirm] = useState('');
+  const [regBusy, setRegBusy] = useState(false);
+  const [regError, setRegError] = useState('');
+  const [regSuccess, setRegSuccess] = useState('');
   const [tab, setTab] = useState('documents');
   const [documents, setDocuments] = useState([]);
   const [documentsBusy, setDocumentsBusy] = useState(false);
@@ -75,15 +82,64 @@ export default function App() {
   useEffect(() => { if (credentials) { loadDocs(credentials); loadInvoices(credentials); } }, [credentials, loadDocs, loadInvoices]);
   useEffect(() => { let active = true; currentSession().then(session => { if (active && session.authenticated) setCredentials({username: session.username, mode: 'session'}); }).catch(() => {}); return () => {active=false;}; }, []);
 
+  async function handleRegister(event) {
+    event.preventDefault();
+    setRegError('');
+    setRegSuccess('');
+    if (regPassword !== regConfirm) {
+      setRegError('Passwords do not match.');
+      return;
+    }
+    if (regPassword.length < 12) {
+      setRegError('Password must be at least 12 characters.');
+      return;
+    }
+    setRegBusy(true);
+    try {
+      const data = await register(regUsername.trim(), regPassword);
+      setRegSuccess(data.detail || 'Account registered successfully! Please sign in.');
+      setUsername(regUsername.trim());
+      setRegPassword('');
+      setRegConfirm('');
+      setTimeout(() => {
+        setPublicPage('login');
+      }, 1000);
+    } catch (error) {
+      setRegError(authError(error));
+    } finally {
+      setRegBusy(false);
+    }
+  }
+
   async function login(event) {
     event.preventDefault(); setLoginBusy(true); setLoginError('');
-    try { const session = await signIn(username.trim(), password); setCredentials({username: session.username, mode: 'session'}); setPassword(''); }
-    catch (error) { setLoginError(authError(error)); }
+    try {
+      const session = await signIn(username.trim(), password);
+      setCredentials({username: session.username, mode: 'session'});
+      setPassword('');
+      setRegSuccess('');
+    } catch (error) { setLoginError(authError(error)); }
     finally { setLoginBusy(false); }
   }
   async function logout() {
     try { await signOut(); } catch (error) { setLoginError(authError(error)); }
-    setCredentials(null); setTab('documents'); setPassword(''); setUsername(''); setDocuments([]); setInvoices([]); setSummary(null); setLineItemView(null); setAnswer(null); setPages(null); setPdfEvidence(null); setMessage(''); setSelectedDocs([]); setProcessingJob(null);
+    setCredentials(null);
+    setPublicPage('home');
+    setTab('documents');
+    setPassword('');
+    setUsername('');
+    setRegSuccess('');
+    setRegError('');
+    setDocuments([]);
+    setInvoices([]);
+    setSummary(null);
+    setLineItemView(null);
+    setAnswer(null);
+    setPages(null);
+    setPdfEvidence(null);
+    setMessage('');
+    setSelectedDocs([]);
+    setProcessingJob(null);
   }
   async function upload(event) {
     event.preventDefault(); if (!credentials) return;
@@ -167,7 +223,226 @@ export default function App() {
     finally { setAsking(false); }
   }
 
-  if (!credentials) return <main className="login-page"><section className="login-panel"><div className="brand"><span className="brand-icon">D</span><span>DocuPilot <b>AI</b></span></div><span className="eyebrow">INTELLIGENT DOCUMENT WORKSPACE</span><h1>Turn documents into decisions.</h1><p className="muted">Sign in with an existing Django account to manage private documents, extract invoices and ask evidence-grounded questions.</p><form onSubmit={login} className="form-stack"><label>Username<input required autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} /></label><label>Password<input required type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} /></label><button className="primary" disabled={loginBusy}>{loginBusy ? 'Signing in…' : 'Sign in'}</button></form><Message text={loginError} kind="error" onClose={() => setLoginError('')} /><div className="security-note">Credentials are kept in memory only, never stored in browser storage. Authentication uses a CSRF-protected HttpOnly session cookie. Use HTTPS for remote deployment.</div></section></main>;
+  if (!credentials) {
+    if (publicPage === 'register') {
+      return (
+        <div className="dedicated-auth-page">
+          <header className="dedicated-auth-header">
+            <div className="brand" role="button" tabIndex={0} onClick={() => setPublicPage('home')} style={{ cursor: 'pointer' }}>
+              <span className="brand-icon">D</span>
+              <span>DocuPilot <b>AI</b></span>
+            </div>
+            <button className="secondary" type="button" onClick={() => setPublicPage('home')}>← Back to Home</button>
+          </header>
+          <main className="dedicated-auth-body">
+            <div className="auth-card-wide">
+              <div className="brand"><span className="brand-icon">D</span><span>DocuPilot <b>AI</b></span></div>
+              <span className="eyebrow" style={{ marginTop: '20px', display: 'block' }}>USER REGISTRATION</span>
+              <h2>Create your workspace account</h2>
+              <p className="desc">Set up an owner-isolated account on this local instance. All documents, extracted invoices, and reviews will remain strictly private to you.</p>
+              <form onSubmit={handleRegister} className="form-stack">
+                <label>Username
+                  <input required autoComplete="username" maxLength={150} value={regUsername} onChange={e => setRegUsername(e.target.value)} placeholder="e.g. charlie" />
+                </label>
+                <label>Password
+                  <input required type="password" autoComplete="new-password" value={regPassword} onChange={e => setRegPassword(e.target.value)} placeholder="Minimum 12 characters" />
+                  <span className="form-helper">Must be at least 12 characters long.</span>
+                </label>
+                <label>Confirm Password
+                  <input required type="password" autoComplete="new-password" value={regConfirm} onChange={e => setRegConfirm(e.target.value)} placeholder="Repeat password" />
+                </label>
+                <button className="primary" disabled={regBusy}>{regBusy ? 'Registering…' : 'Register & Create Account'}</button>
+              </form>
+              <Message text={regError} kind="error" onClose={() => setRegError('')} />
+              <Message text={regSuccess} kind="info" onClose={() => setRegSuccess('')} />
+              <div className="auth-switch-row">
+                <span>Already registered? <button type="button" onClick={() => { setPublicPage('login'); setUsername(regUsername); }}>Sign in here →</button></span>
+                <button type="button" onClick={() => setPublicPage('home')}>Return to Home</button>
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    if (publicPage === 'login') {
+      return (
+        <div className="dedicated-auth-page">
+          <header className="dedicated-auth-header">
+            <div className="brand" role="button" tabIndex={0} onClick={() => setPublicPage('home')} style={{ cursor: 'pointer' }}>
+              <span className="brand-icon">D</span>
+              <span>DocuPilot <b>AI</b></span>
+            </div>
+            <button className="secondary" type="button" onClick={() => setPublicPage('home')}>← Back to Home</button>
+          </header>
+          <main className="dedicated-auth-body">
+            <div className="auth-card-wide">
+              <div className="brand"><span className="brand-icon">D</span><span>DocuPilot <b>AI</b></span></div>
+              <span className="eyebrow" style={{ marginTop: '20px', display: 'block' }}>WORKSPACE SIGN IN</span>
+              <h2>Sign in to DocuPilot AI</h2>
+              <p className="desc">Enter your credentials to access your private documents, invoices, and evidence-grounded search.</p>
+              <Message text={regSuccess} kind="info" onClose={() => setRegSuccess('')} />
+              <form onSubmit={login} className="form-stack">
+                <label>Username
+                  <input required autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} />
+                </label>
+                <label>Password
+                  <input required type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} />
+                </label>
+                <button className="primary" disabled={loginBusy}>{loginBusy ? 'Signing in…' : 'Sign in'}</button>
+              </form>
+              <Message text={loginError} kind="error" onClose={() => setLoginError('')} />
+              <div style={{ marginTop: '16px', fontSize: '12px', color: '#8fa5be' }}>
+                Demo accounts: <strong>alice</strong> or <strong>bob</strong> · Password: <code>DemoPass2026!Secure</code>
+              </div>
+              <div className="auth-switch-row">
+                <span>Need an account? <button type="button" onClick={() => setPublicPage('register')}>Register now →</button></span>
+                <button type="button" onClick={() => setPublicPage('home')}>Return to Home</button>
+              </div>
+              <div className="security-note">
+                Credentials are kept in memory only; authentication uses a CSRF-protected HttpOnly session cookie.
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // Default: Home Page
+    return (
+      <div className="home-view">
+        <header className="site-header">
+          <div className="brand" role="button" tabIndex={0} onClick={() => setPublicPage('home')} style={{ cursor: 'pointer' }}>
+            <span className="brand-icon">D</span>
+            <span>DocuPilot <b>AI</b></span>
+          </div>
+          <nav className="site-header-nav" aria-label="Main Navigation">
+            <a href="#features">Features</a>
+            <a href="#workflow">Workflow</a>
+            <button type="button" className="btn-register" onClick={() => setPublicPage('register')}>Register</button>
+            <button type="button" className="btn-login" onClick={() => setPublicPage('login')}>Login</button>
+          </nav>
+        </header>
+
+        <main className="home-content">
+          <section className="hero-grid">
+            <div className="hero-copy">
+              <span className="eyebrow">TECH_INNOVATORS · INTELLIGENT DOCUMENT WORKSPACE</span>
+              <h1>Turn documents into decisions.</h1>
+              <p className="hero-subtitle">
+                Private, evidence-grounded document intelligence with local OCR, automated invoice extraction, hybrid semantic Q&A, and human-in-the-loop review. Built for audit reliability with zero data leakage.
+              </p>
+              <div className="hero-badges">
+                <span className="hero-badge">🔒 100% Local & Private (SQLite3)</span>
+                <span className="hero-badge">⚡ Local Tesseract OCR</span>
+                <span className="hero-badge">📑 Auditable Evidence Viewer</span>
+                <span className="hero-badge">🛡️ CSRF Session Security</span>
+              </div>
+              <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '14px' }}>
+                <button type="button" className="primary" style={{ padding: '12px 24px', fontSize: '14px' }} onClick={() => setPublicPage('register')}>
+                  🚀 Register New Account
+                </button>
+                <button type="button" className="secondary" style={{ padding: '12px 24px', fontSize: '14px' }} onClick={() => setPublicPage('login')}>
+                  🔐 Workspace Login
+                </button>
+              </div>
+            </div>
+
+            <div className="login-panel" style={{ width: '100%' }}>
+              <div className="brand"><span className="brand-icon">D</span><span>DocuPilot <b>AI</b></span></div>
+              <span className="eyebrow">FAST ACCESS</span>
+              <h2 style={{ margin: '8px 0 10px', fontSize: '20px' }}>Sign in to Workspace</h2>
+              <p className="muted" style={{ fontSize: '13px', margin: '0 0 16px' }}>
+                Access your private documents, review queue and financial analytics.
+              </p>
+              <Message text={regSuccess} kind="info" onClose={() => setRegSuccess('')} />
+              <form onSubmit={login} className="form-stack" style={{ marginTop: '14px' }}>
+                <label>Username
+                  <input required autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} />
+                </label>
+                <label>Password
+                  <input required type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} />
+                </label>
+                <button className="primary" disabled={loginBusy}>{loginBusy ? 'Signing in…' : 'Sign in'}</button>
+              </form>
+              <Message text={loginError} kind="error" onClose={() => setLoginError('')} />
+              <div style={{ marginTop: '14px', fontSize: '12px', color: '#8fa5be' }}>
+                Demo: <strong>alice</strong> / <strong>bob</strong> · Pass: <code>DemoPass2026!Secure</code>
+              </div>
+              <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #233752', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                <span className="muted">Need an account?</span>
+                <button type="button" style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontWeight: '700', cursor: 'pointer' }} onClick={() => setPublicPage('register')}>
+                  Create account →
+                </button>
+              </div>
+              <div className="security-note">
+                Session-only authentication. Documents remain owner-isolated on this system.
+              </div>
+            </div>
+          </section>
+
+          <section className="workflow-strip" id="workflow">
+            <h3>Workflow · From Registration to Intelligence</h3>
+            <div className="workflow-steps-grid">
+              <div className="workflow-step-card">
+                <span className="step-num">Step 01</span>
+                <h4>Registration</h4>
+                <p>Register an owner-isolated account on this local instance. Passwords are validated and salted securely in SQLite3.</p>
+              </div>
+              <div className="workflow-step-card">
+                <span className="step-num">Step 02</span>
+                <h4>Session Login</h4>
+                <p>Authenticate via CSRF-protected Lax session cookies with idle timeout rotation and rate-limited brute-force guards.</p>
+              </div>
+              <div className="workflow-step-card">
+                <span className="step-num">Step 03</span>
+                <h4>Intelligent Dashboard</h4>
+                <p>Upload files, run local OCR, review invoice line items, and ask evidence-backed questions.</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="features-section" id="features">
+            <h2>Core Platform Capabilities</h2>
+            <p className="section-subtitle">
+              DocuPilot AI brings enterprise-grade document intelligence to a zero-cloud-leakage, fully local installation.
+            </p>
+            <div className="features-grid">
+              <div className="feature-card">
+                <div className="feature-card-icon">📄</div>
+                <h3>Local OCR & Private Storage</h3>
+                <p>Processes PDF, TXT, PNG, and JPEG files using local Tesseract OCR. Documents are stored in private media roots with no public URLs.</p>
+              </div>
+              <div className="feature-card">
+                <div className="feature-card-icon">🧾</div>
+                <h3>Invoice Intelligence</h3>
+                <p>Automatically derives totals, currencies, suppliers, due dates, and itemized line items with owner-audited payment lifecycle tracking.</p>
+              </div>
+              <div className="feature-card">
+                <div className="feature-card-icon">🔍</div>
+                <h3>Evidence-Grounded Q&A</h3>
+                <p>Keyword, multilingual semantic, and hybrid retrieval modes quote exact source passages and page numbers without hallucination.</p>
+              </div>
+              <div className="feature-card">
+                <div className="feature-card-icon">👥</div>
+                <h3>Human-in-the-Loop Review</h3>
+                <p>Confidence scores, classification reviews, and operator review queues ensure automated AI suggestions are verifiable by humans.</p>
+              </div>
+            </div>
+          </section>
+
+          <footer className="home-footer">
+            <div>
+              <strong>DocuPilot AI</strong> · Tech_Innovators · Released under the MIT License.
+            </div>
+            <div>
+              Private & On-Premises · Local SQLite3 Database Baseline
+            </div>
+          </footer>
+        </main>
+      </div>
+    );
+  }
 
   return <div className="app-shell"><aside className="sidebar"><div className="brand"><span className="brand-icon">D</span><span>DocuPilot <b>AI</b></span></div><p className="sidebar-label">WORKSPACE</p><nav aria-label="Primary navigation">{nav.map(([key,label]) => <button key={key} onClick={() => setTab(key)} className={`nav-item ${tab === key ? 'active' : ''}`}>{label}</button>)}</nav><div className="sidebar-bottom"><span>Signed in as <strong>{credentials.username}</strong></span><button className="ghost" onClick={logout}>Sign out</button></div></aside><main className="main-panel"><header className="topbar"><div><span className="eyebrow">TECH_INNOVATORS / DOCUPILOT AI</span><h1>{nav.find(([key]) => key === tab)?.[1]}</h1></div><span className="environment-tag">SQLite3 · MVP</span></header><div className="main-content">
   {tab === 'documents' && <><div className="intro"><h2>Document library</h2><p>Upload PDF, UTF-8 TXT, PNG or JPEG files (10 MiB maximum). Scanned pages use local OCR. Private documents are accessible only to their owner.</p></div><div className="panel"><h3>Upload document</h3><form onSubmit={upload} className="upload-form"><label>Document title (optional)<input maxLength={255} value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Supplier invoice October" /></label><label>Choose PDF, TXT or image<input type="file" accept=".pdf,.txt,.png,.jpg,.jpeg,application/pdf,text/plain,image/png,image/jpeg" required onChange={e => setFile(e.target.files?.[0] || null)} /></label><button className="primary" disabled={uploadBusy || !file}>{uploadBusy ? 'Uploading…' : 'Upload document'}</button></form></div>{processingJob && <AsyncJobPanel job={processingJob} auth={credentials} onClose={() => setProcessingJob(null)} onUpdate={setProcessingJob} onComplete={() => { loadDocs(credentials); setPages(null); setAnswer(null); }} />}

@@ -1,5 +1,5 @@
 from django.urls import include, path
-from .auth_views import csrf, session_login, session_me, session_logout
+from .auth_views import csrf, session_login, session_me, session_logout, session_register
 from rest_framework.routers import DefaultRouter
 from .views import DocumentViewSet, ask, health, upload, invoices, invoice_dashboard, invoice_report, invoice_export, invoice_payment_status, invoice_line_items, review_queue, review_record, invoice_analytics, processing_job_detail, retry_processing_job, processing_overview, classification_evaluation, classification_feedback_evaluation, classification_feedback_quality, classification_label_export, classification_reliability
 
@@ -7,6 +7,7 @@ router = DefaultRouter()
 router.register("documents", DocumentViewSet, basename="document")
 urlpatterns = [
     path("auth/csrf/", csrf, name="auth-csrf"),
+    path("auth/register/", session_register, name="auth-register"),
     path("auth/login/", session_login, name="auth-login"),
     path("auth/me/", session_me, name="auth-me"),
     path("auth/logout/", session_logout, name="auth-logout"),

@@ -1,6 +1,8 @@
 """CSRF-protected, rate-limited, cookie-session endpoints."""
 from django.conf import settings
-from django.contrib.auth import logout
+from django.contrib.auth import get_user_model, logout
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
@@ -54,3 +56,39 @@ def session_me(request):
 def session_logout(request):
     logout(request)
     return response({"authenticated": False})
+
+@require_POST
+@csrf_protect
+@never_cache
+def session_register(request):
+    if request.content_type != "application/json" or len(request.body) > 2048:
+        return response({"detail": "Invalid registration request."}, 400)
+    try:
+        fields = json.loads(request.body)
+        username = fields.get("username", "")
+        password = fields.get("password", "")
+    except (ValueError, AttributeError, TypeError):
+        return response({"detail": "Invalid registration request."}, 400)
+    if not isinstance(username, str) or not isinstance(password, str):
+        return response({"detail": "Username and password must be text strings."}, 400)
+    username = username.strip()
+    if not (1 <= len(username) <= 150):
+        return response({"detail": "Username must be between 1 and 150 characters."}, 400)
+    if not (12 <= len(password) <= 1024):
+        return response({"detail": "Password must be at least 12 characters."}, 400)
+
+    User = get_user_model()
+    if User.objects.filter(username__iexact=username).exists():
+        return response({"detail": "A user with that username already exists."}, 400)
+
+    try:
+        validate_password(password, user=User(username=username))
+    except ValidationError as e:
+        return response({"detail": "; ".join(e.messages)}, 400)
+
+    user = User.objects.create_user(username=username, password=password)
+    return response({
+        "username": user.get_username(),
+        "registered": True,
+        "detail": "Account registered successfully. Please sign in to access your dashboard."
+    }, 201)

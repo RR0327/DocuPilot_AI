@@ -86,6 +86,10 @@ SECURE_HSTS_PRELOAD = False
 if os.getenv("DJANGO_TRUST_PROXY_HTTPS", "false").lower() == "true":
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CSRF_TRUSTED_ORIGINS = [x.strip() for x in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if x.strip()]
+if DEBUG:
+    for _dev_origin in ("http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8000", "http://127.0.0.1:8000"):
+        if _dev_origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(_dev_origin)
 SESSION_COOKIE_AGE = int(os.getenv("DJANGO_SESSION_AGE", "3600"))
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # Do not expose private files as static media or add permissive CORS middleware.
