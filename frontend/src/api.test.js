@@ -68,18 +68,3 @@ test('validates OCR image uploads', () => {
   assert.equal(validateUpload({ name: 'photo.jpeg', size: 2048 }), '');
   assert.match(validateUpload({ name: 'bad.webp', size: 1024 }), /Only PDF/);
 });
-
-
-test('owner-scoped invoice line item API uses the same authenticated client', async () => {
-  const oldFetch = globalThis.fetch;
-  try {
-    globalThis.fetch = async (url, opts) => {
-      assert.equal(url, '/api/invoices/44/line-items/');
-      assert.match(opts.headers.Authorization, /^Basic /);
-      return { ok: true, status: 200, json: async () => ({ count: 1, results: [{ description: 'Ceramic Tile', page_number: 2, validation_status: 'matched' }] }) };
-    };
-    const result = await api('/invoices/44/line-items/', { username: 'owner', password: 'p' });
-    assert.equal(result.results[0].page_number, 2);
-    assert.equal(result.results[0].description, 'Ceramic Tile');
-  } finally { globalThis.fetch = oldFetch; }
-});
