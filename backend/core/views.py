@@ -1,5 +1,5 @@
 from rest_framework import status, viewsets
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from .invoice_dashboard import dashboard, export_csv, filtered_invoices
 from rest_framework.decorators import api_view, permission_classes, action, parser_classes
@@ -36,6 +36,27 @@ class DocumentViewSet(viewsets.ModelViewSet):
         instance.delete()  # cascades page and record metadata
         if path:
             storage.delete(path)
+
+    @action(detail=True, methods=["get"], url_path="private-pdf")
+    def private_pdf(self, request, pk=None):
+        """Stream a PDF exclusively to its authenticated owner, never via public MEDIA_URL."""
+        document = self.get_object()
+        if document.file_type.lower() != "pdf" or not document.file:
+            return Response({"detail": "PDF preview is available only for uploaded PDFs."}, status=415)
+        try:
+            handle = document.file.open("rb")
+            if handle.read(5) != b"%PDF-":
+                handle.close()
+                return Response({"detail": "Invalid PDF signature."}, status=422)
+            handle.seek(0)
+        except (OSError, ValueError, FileNotFoundError):
+            raise Http404("PDF is unavailable")
+        response = FileResponse(handle, content_type="application/pdf", as_attachment=False)
+        response["Cache-Control"] = "private, no-store, max-age=0"
+        response["X-Content-Type-Options"] = "nosniff"
+        response["Content-Security-Policy"] = "default-src 'none'; sandbox"
+        response["Content-Disposition"] = 'inline; filename="document.pdf"'
+        return response
 
     @action(detail=True, methods=["get"])
     def pages(self, request, pk=None):
