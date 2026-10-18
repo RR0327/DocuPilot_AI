@@ -21,9 +21,8 @@ DocuPilot AI is a document intelligence web application for securely processing 
 
 ## Live Demo
 
-**Application URL:** `PASTE_YOUR_DEPLOYMENT_LINK_HERE`
+**Application URL:** `https://docu-pilot-ai.vercel.app/`
 
-> Replace the placeholder with your actual HTTPS deployment URL before publishing. Do not use `localhost` or `127.0.0.1` as a public demo link.
 
 ## Features
 
