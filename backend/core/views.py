@@ -153,6 +153,30 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+def classification_feedback_quality(request):
+    """Owner-only aggregate review disagreement; never claims model accuracy."""
+    from .feedback_quality import analyze_feedback
+    response = Response(analyze_feedback(Document.objects.filter(owner=request.user)))
+    response["Cache-Control"] = "no-store"
+    return response
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def classification_label_export(request):
+    """Explicit opt-in export; label pairs only, no private document metadata."""
+    from .feedback_quality import make_private_label_export
+    if request.data != {"confirm_label_only_export": True}:
+        return Response({"detail": "Explicit label-only export confirmation required."}, status=400)
+    response = Response(make_private_label_export(Document.objects.filter(owner=request.user)))
+    response["Cache-Control"] = "no-store"
+    response["Content-Disposition"] = 'attachment; filename="docupilot_feedback_labels.json"'
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def classification_feedback_evaluation(request):
     from .classification_feedback import feedback_summary
     response = Response(feedback_summary(Document.objects.filter(owner=request.user)))

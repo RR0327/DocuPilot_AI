@@ -216,3 +216,14 @@ See [PHASE4_STEP2_TESTING.md](PHASE4_STEP2_TESTING.md) for Windows 11 setup, tes
 ## Phase 4 Step 4 — human-verified document classification
 
 Classification decisions are now tracked through an append-only `ClassificationFeedback` history. Machine predictions and their original page-linked evidence remain untouched; a human can verify, override (with a reason), or clear the current human decision. The owner-only `GET/POST /api/documents/{id}/classification-review/` endpoint returns both machine and effective reviewed categories. `GET /api/classification/feedback-evaluation/` summarizes **review activity**, not independent classification accuracy. See [PHASE4_STEP4_TESTING.md](PHASE4_STEP4_TESTING.md) for installation, migration, security and regression procedures.
+
+
+## Phase 4 Step 5 — Operational classification feedback quality
+
+- Owner-scoped `GET /api/classification/feedback-quality/` returns review coverage, machine-vs-owner agreement/disagreement, and a count of machine classifications that changed after review. This is **not a classifier accuracy estimate**.
+- `POST /api/classification/feedback-label-export/` requires `{"confirm_label_only_export": true}` and returns a pseudonymous **label-only** operational feedback snapshot. Each export generates fresh random aliases. No document text, page evidence, filenames, identifiers, reviewer IDs or notes are exported.
+- Owner feedback does **not** become independently verified ground truth by virtue of approval. A genuine independent test set still requires consented documents, separate annotators, provenance, and adjudication. Label-only exports cannot be used to re-run the classifier benchmark.
+- React navigation provides **Feedback quality** with an agreement table and explicitly confirmed privacy-safe export.
+- The APIs require authenticated users and set `Cache-Control: no-store`; the database remains SQLite3, and no migrations are introduced.
+
+See [Phase 4 Step 5 testing](PHASE4_STEP5_TESTING.md) for acceptance instructions.

@@ -1,11 +1,13 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import DocumentViewSet, ask, health, upload, invoices, invoice_dashboard, invoice_report, invoice_export, invoice_payment_status, invoice_line_items, review_queue, review_record, invoice_analytics, processing_job_detail, retry_processing_job, processing_overview, classification_evaluation, classification_feedback_evaluation
+from .views import DocumentViewSet, ask, health, upload, invoices, invoice_dashboard, invoice_report, invoice_export, invoice_payment_status, invoice_line_items, review_queue, review_record, invoice_analytics, processing_job_detail, retry_processing_job, processing_overview, classification_evaluation, classification_feedback_evaluation, classification_feedback_quality, classification_label_export
 
 router = DefaultRouter()
 router.register("documents", DocumentViewSet, basename="document")
 urlpatterns = [
     path("health/", health, name="health"),
+    path("classification/feedback-quality/", classification_feedback_quality, name="classification-feedback-quality"),
+    path("classification/feedback-label-export/", classification_label_export, name="classification-label-export"),
     path("classification/feedback-evaluation/", classification_feedback_evaluation, name="classification-feedback-evaluation"),
     path("classification/evaluation/", classification_evaluation, name="classification-evaluation"),
     path("processing-jobs/overview/", processing_overview, name="processing-overview"),
