@@ -100,3 +100,11 @@ td select { min-width:118px; }
 .source small { color:#9cb3ce; }
 @media(max-width:1050px) { .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .document-item { align-items:flex-start; flex-direction:column; } .actions { justify-content:flex-start; } }
 @media(max-width:700px) { .app-shell { flex-direction:column; } .sidebar { min-height:auto; flex:auto; padding:16px; } .sidebar-label { display:none; } .sidebar nav { display:flex; overflow-x:auto; margin-top:16px; } .sidebar-bottom { flex-direction:row; display:flex; justify-content:space-between; margin-top:12px; padding-top:10px; } .topbar { padding:23px 18px; } .topbar h1 { font-size:22px; } .environment-tag { display:none; } .main-content { padding:24px 15px 40px; } .panel { padding:17px; } .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; } .metric { padding:14px; } .metric strong { font-size:25px; } .login-panel { padding:27px; } }
+
+/* Source PDF rendering remains within the authenticated workspace. */
+.evidence-viewer { margin-top: 1.5rem; border: 1px solid var(--border, #cbd5e1); padding: 1rem; border-radius: 0.75rem; }
+.evidence-excerpt { white-space: pre-wrap; border-left: 4px solid #0d9488; padding: .7rem 1rem; background: #f0fdfa; color: #134e4a; }
+.pdf-controls { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; margin: 1rem 0; }
+.pdf-canvas { overflow: auto; max-height: 75vh; background: #e2e8f0; padding: 1rem; }
+.pdf-canvas .react-pdf__Page { margin: 0 auto; width: max-content; }
+.pdf-evidence-highlight { background: rgba(250, 204, 21, 0.55); box-shadow: 0 0 0 1px #d97706; }

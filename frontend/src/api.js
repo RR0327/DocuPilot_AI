@@ -80,3 +80,11 @@ export function triggerDownload(blob, filename) {
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+/** Binary private PDF bytes; never cache or persist authenticated response. */
+export async function privatePdf(documentId, auth, request = api) {
+  if (!Number.isSafeInteger(documentId) || documentId <= 0) throw new Error('Invalid document ID');
+  const blob = await request(`/documents/${documentId}/private-pdf/`, auth, { download: true });
+  if (!(blob instanceof Blob) || !blob.size) throw new Error('PDF preview is empty');
+  return blob;
+}
