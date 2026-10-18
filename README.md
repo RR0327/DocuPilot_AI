@@ -245,3 +245,8 @@ See [Phase 4 Step 6 testing guide](PHASE4_STEP6_TESTING.md). An independent two-
 ## Phase 5 Step 2 — Session authentication and rate limiting
 
 The browser now signs in using a CSRF-protected Django session and sends HttpOnly cookies instead of Basic credentials on every request. Rate-limited login attempts are recorded by HMAC digest in SQLite3 (`0012_authenticationfailure`). Old Basic API clients are disabled unless **both** `DJANGO_DEBUG=true` and `DOCUPILOT_ALLOW_DEV_BASIC=true`. Security acceptance and Windows commands: [PHASE5_STEP2_TESTING.md](PHASE5_STEP2_TESTING.md). Do not deploy the development server on a public interface.
+
+
+## Phase 5 Step 3 — Security acceptance and release drills
+
+Step 3 uses the Phase 5 Step 2 session security baseline and incorporates the five user-supplied source replacements. Run `python manage.py release_acceptance` from `backend/` for a read-only JSON preflight; use `--require-production` only against actual production configuration. Follow [PHASE5_STEP3_TESTING.md](PHASE5_STEP3_TESTING.md) for Windows 11 tests, live E2E journey, Chrome-channel Playwright requirements, backup/restore drills and release limitations. Preserve the [MIT license](LICENSE), [contribution policy](CONTRIBUTING.md) and [security policy](SECURITY.md).
