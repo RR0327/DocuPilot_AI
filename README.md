@@ -153,3 +153,9 @@ invoice remains `unreviewed` until a human verifies it against the original PDF.
 This step uses the original SQLite3 database and migration
 `core.0006_invoicelineitem`; it does not require PostgreSQL, paid models, or new
 frontend dependencies. See [Phase 2 Step 4 testing](PHASE2_STEP4_TESTING.md).
+
+## Phase 2 Step 5 — Evidence and extraction quality evaluation
+
+Adds reproducible local quality metrics using the existing keyword, semantic and hybrid retrieval code paths. The benchmark command (`python manage.py evaluate_docupilot --mode keyword`) creates isolated synthetic documents, measures Recall@5, MRR, no-answer abstention and exact citation provenance, measures invoice exact-field extraction, and rolls back its temporary database records. It also reports *illustrative* OCR character-error rates from supplied reference/prediction text; these are **not live OCR accuracy claims**. Additional review warnings flag due dates preceding invoice dates and recognized line totals inconsistent with a stated subtotal. No source values are modified automatically. The benchmark corpus is a smoke test, not evidence of real-world reliability.
+
+See [Phase 2 Step 5 testing and release gate](PHASE2_STEP5_TESTING.md) for Windows 11 commands and real-data evaluation requirements. SQLite3 and all prior functionality, private storage, and governance documents are preserved. **Phase 2 is only ready for a local demonstration after user-executed acceptance tests; public deployment requires separate security and operations work.**
