@@ -21,8 +21,8 @@ export default function ClassificationPanel({ document, auth, onUpdated }) {
     <button type="button" className="secondary" disabled={busy || document.processing_status !== 'completed'} onClick={() => run('POST')}>Reclassify</button></div>
     {error && <p role="alert" className="notice notice-error">{error}</p>}
     {result && <div className="classification-detail"><strong>{classificationLabel(result.category)}</strong> <small>{result.reason}</small>
-      <p className="footnote">Rule weights are not probability or confidence scores. Validate against the original source.</p>
-      {result.evidence.length ? <ul>{result.evidence.map((item, i) => <li key={`${item.page_number}-${item.phrase}-${i}`}>Page {item.page_number} · {item.category} · “{item.phrase}” — <span>{item.excerpt}</span></li>)}</ul> : <p>No category evidence found.</p>}
+      <p className="footnote">Rule weights are not probability or confidence scores. Validate against the original source. OCR and Bangla signals may be imperfect.</p>
+      {result.evidence.length ? <ul>{result.evidence.map((item, i) => <li key={`${item.page_number}-${item.phrase}-${i}`}>Page {item.page_number} · {item.category} · “{item.phrase}” {item.signal && item.signal !== item.phrase ? `(signal: ${item.signal})` : null} — <span>{item.excerpt}</span></li>)}</ul> : <p>No category evidence found.</p>}
     </div>}
   </section>;
 }

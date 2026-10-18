@@ -4,6 +4,7 @@ Classification signals come only from extracted page text (including OCR). Score
 rule weights, NOT calibrated ML probabilities. If evidence is weak or tied, abstain.
 """
 import re
+import unicodedata
 from .models import DocumentClassification
 
 RULES = {
@@ -12,6 +13,18 @@ RULES = {
     "report": [("executive summary", 3), ("methodology", 2), ("findings", 2), ("conclusions", 2), ("annual report", 3), ("research report", 3), ("results and discussion", 3)],
     "contract": [("this agreement", 3), ("parties agree", 3), ("terms and conditions", 2), ("governing law", 3), ("termination clause", 3), ("hereinafter", 2), ("signed by", 2)],
 }
+# Additional multilingual rules are explicit, auditable signals (not learned probabilities).
+RULES["invoice"] += [("চালান নম্বর", 3), ("চালান নং", 3), ("মোট টাকা", 2), ("বিলের তারিখ", 2)]
+RULES["policy"] += [("গোপনীয়তা নীতি", 3), ("ফেরত নীতি", 3), ("নীতিমালা", 3)]
+RULES["report"] += [("নির্বাহী সারসংক্ষেপ", 3), ("গবেষণা পদ্ধতি", 3), ("ফলাফল ও আলোচনা", 3)]
+RULES["contract"] += [("এই চুক্তি", 3), ("চুক্তির শর্ত", 3), ("চুক্তি বাতিল", 3)]
+# Carefully scoped OCR confusion variants; original source substring remains in evidence.
+OCR_ALIASES = {"invoice no": [r"inv[o0]ice\s+n[o0]\.?"],
+               "invoice number": [r"inv[o0]ice\s+number"],
+               "invoice date": [r"inv[o0]ice\s+date"],
+               "methodology": [r"meth[o0]d[o0]logy"],
+               "privacy policy": [r"privacy\s+p[o0]licy"],
+               "governing law": [r"g[o0]verning\s+law"]}
 MAX_EVIDENCE = 12
 
 
@@ -22,18 +35,35 @@ def classify_pages(pages):
     for page_number, text in pages:
         if not isinstance(text, str) or not text.strip():
             continue
-        normalized = re.sub(r"\s+", " ", text.casefold())
+        # NFC normalizes Unicode without collapsing source whitespace; excerpts are
+        # sliced from the original unmodified page text with exact source offsets.
+        folded = unicodedata.normalize("NFC", text).casefold()
         for category, phrases in RULES.items():
             for phrase, weight in phrases:
-                match = re.search(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)", normalized)
+                words = phrase.split()
+                # Tolerate whitespace/line-break differences common in OCR output.
+                pattern = r"(?<!\w)" + r"\s+".join(re.escape(w) for w in words) + r"(?!\w)"
+                match = re.search(pattern, folded)
+                if match is None:
+                    for alias in OCR_ALIASES.get(phrase, []):
+                        match = re.search(r"(?<!\w)(?:" + alias + r")(?!\w)", folded)
+                        if match:
+                            break
                 if match:
                     scores[category] += weight
-                    if match is not None:
-                        start = max(0, match.start() - 65)
-                        end = min(len(normalized), match.end() + 85)
-                        evidence.append({"category": category, "phrase": phrase,
-                                         "weight": weight, "page_number": int(page_number),
-                                         "excerpt": normalized[start:end]})
+                    start = max(0, match.start() - 65)
+                    end = min(len(text), match.end() + 85)
+                    # Offset slicing matches original text for ordinary NFC text.
+                    # If Unicode normalization shifted indices, locate source
+                    # case-insensitively or skip the evidence rather than fabricate it.
+                    excerpt = text[start:end]
+                    surface = text[match.start():match.end()]
+                    if surface and surface.casefold() in excerpt.casefold():
+                        evidence.append({"category": category, "phrase": surface,
+                                         "signal": phrase, "weight": weight,
+                                         "page_number": int(page_number), "excerpt": excerpt})
+                    else:
+                        scores[category] -= weight
     ranked = sorted(scores, key=lambda k: (-scores[k], k))
     leader = ranked[0]
     runner_up = scores[ranked[1]]

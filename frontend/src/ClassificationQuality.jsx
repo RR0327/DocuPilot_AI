@@ -25,6 +25,9 @@ export default function ClassificationQuality({ auth }) {
       <div className="table-wrap"><table><caption>Confusion matrix — rows are true labels, columns are predictions</caption><thead><tr><th>Actual / Predicted</th>{report.labels.map(label=><th key={label}>{label}</th>)}</tr></thead><tbody>
         {report.labels.map(actual=><tr key={actual}><th scope="row">{actual}</th>{report.labels.map(predicted=><td key={predicted}>{report.confusion_matrix[actual][predicted]}</td>)}</tr>)}
       </tbody></table></div>
+      <h3>Error analysis</h3>
+      <p>False abstentions: {report.error_analysis?.false_abstention ?? 0} · Unsafe guesses on unknown cases: {report.error_analysis?.unsafe_guess ?? 0} · Wrong category: {report.error_analysis?.wrong_category ?? 0}</p>
+      <p className="footnote">To measure independent real-world performance, run the management command with --dataset using a provenance-documented, human-labeled JSON dataset. This page remains synthetic only.</p>
       <p className="footnote">Unknown is a real evaluation label. A tie or weak signal should abstain rather than guess.</p>
     </>}
   </section>;

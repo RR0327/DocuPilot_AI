@@ -1,0 +1,10 @@
+{
+  "provenance": {
+    "labeling_method": "independent_human_review",
+    "reviewer_protocol": "REPLACE: who independently labeled examples, adjudication and conflict procedure",
+    "source_description": "REPLACE: origin, license/consent, sampling and privacy constraints"
+  },
+  "cases": [
+    {"id": "REPLACE-001", "label": "invoice", "pages": [{"page_number": 1, "text": "REPLACE with licensed or consented document text"}]}
+  ]
+}

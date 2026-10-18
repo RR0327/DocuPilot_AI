@@ -204,3 +204,10 @@ Phase 4 Step 2 provides a **synthetic classification quality benchmark** (15 lab
 - No SQLite3 migrations are required. All existing processing and document-owner restrictions remain in force.
 
 See [PHASE4_STEP2_TESTING.md](PHASE4_STEP2_TESTING.md) for Windows 11 setup, tests, release acceptance and limitations.
+
+## Phase 4 Step 3 — classification refinement
+
+- Adds Bangla invoice/policy/report/contract signals, OCR-tolerant matching and exact source excerpts. Classification remains explainable and can abstain.
+- Reports false abstentions, unsafe guesses, and wrong-category errors in synthetic quality reporting.
+- Adds optional *externally human-labeled* evaluation CLI (`python manage.py evaluate_classification --dataset evaluation/independent_labels.json`) with provenance metadata. The independently labeled dataset is **not supplied**; refer to `backend/evaluation/independent_labels_TEMPLATE.json`. No real-world accuracy is claimed.
+- Full verification instructions: [PHASE4_STEP3_TESTING.md](PHASE4_STEP3_TESTING.md).
