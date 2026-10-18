@@ -11,7 +11,7 @@ from .invoice_extraction import InvoiceError, extract_invoice
 from .models import Document, ExtractedRecord, QuestionAnswer, InvoicePaymentState
 from .search import MAX_QUERY_LENGTH, retrieve, answer_from_evidence
 from .semantic import SemanticUnavailable
-from .serializers import DocumentSerializer, DocumentPageSerializer, ExtractedRecordSerializer, UploadDocumentSerializer
+from .serializers import DocumentSerializer, DocumentPageSerializer, ExtractedRecordSerializer, UploadDocumentSerializer, InvoiceLineItemSerializer
 
 
 @api_view(["GET"])
@@ -192,3 +192,12 @@ def invoice_payment_status(request, record_id):
         return Response({"payment_status": ["Use exactly one valid status: unknown, pending, paid or disputed."]}, status=400)
     state, _ = InvoicePaymentState.objects.update_or_create(record=record, defaults={"status": new_status})
     return Response({"record_id": record.pk, "payment_status": state.status, "updated_at": state.updated_at})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def invoice_line_items(request, record_id):
+    """Never reveal line items from another user's invoice."""
+    record = get_object_or_404(ExtractedRecord, pk=record_id, record_type="invoice", document__owner=request.user)
+    items = record.line_items.all().order_by("line_number")
+    return Response({"record_id": record.id, "count": items.count(), "results": InvoiceLineItemSerializer(items, many=True).data})

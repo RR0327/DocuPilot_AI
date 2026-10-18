@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .ocr import OCRError, validate_image
-from .models import Document, DocumentPage, ExtractedRecord, QuestionAnswer
+from .models import Document, DocumentPage, ExtractedRecord, QuestionAnswer, InvoiceLineItem
 
 MAX_DOCUMENT_BYTES = 10 * 1024 * 1024
 
@@ -93,10 +93,17 @@ class DocumentPageSerializer(serializers.ModelSerializer):
         fields = ["id", "page_number", "extracted_text"]
 
 
+class InvoiceLineItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvoiceLineItem
+        fields = ["line_number", "description", "quantity", "unit_price", "line_total", "calculated_total", "validation_status", "page_number", "source_excerpt"]
+
+
 class ExtractedRecordSerializer(serializers.ModelSerializer):
+    line_items = InvoiceLineItemSerializer(many=True, read_only=True)
     class Meta:
         model = ExtractedRecord
-        fields = ["id", "record_type", "extracted_data", "validation_status", "created_at"]
+        fields = ["id", "record_type", "extracted_data", "validation_status", "created_at", "line_items"]
 
 
 class QuestionAnswerSerializer(serializers.ModelSerializer):

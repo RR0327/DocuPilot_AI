@@ -1,6 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import DocumentViewSet, ask, health, upload, invoices, invoice_dashboard, invoice_report, invoice_export, invoice_payment_status
+from .views import DocumentViewSet, ask, health, upload, invoices, invoice_dashboard, invoice_report, invoice_export, invoice_payment_status, invoice_line_items
 
 router = DefaultRouter()
 router.register("documents", DocumentViewSet, basename="document")
@@ -12,6 +12,7 @@ urlpatterns = [
     path("invoices/report/", invoice_report, name="invoice-report"),
     path("invoices/dashboard/", invoice_dashboard, name="invoice-dashboard"),
     path("invoices/export/", invoice_export, name="invoice-export"),
+    path("invoices/<int:record_id>/line-items/", invoice_line_items, name="invoice-line-items"),
     path("invoices/<int:record_id>/payment-status/", invoice_payment_status, name="invoice-payment-status"),
     path("", include(router.urls)),
 ]
